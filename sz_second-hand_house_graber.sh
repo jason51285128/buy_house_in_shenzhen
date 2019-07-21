@@ -37,7 +37,15 @@ echo "__EVENTVALIDATION=$__EVENTVALIDATION"
 echo "tep_name=$tep_name"
 echo "ddlPageCount=$ddlPageCount"
 
-
+curl  -s --data-urlencode __EVENTTARGET="$__EVENTTARGET" \
+         --data-urlencode scriptManager2="$scriptManager2" \
+         -data-urlencode __EVENTARGUMENT="$__EVENTARGUMENT" \
+         --data-urlencode __VIEWSTATE="$__VIEWSTATE" \
+         --data-urlencode __VIEWSTATEGENERATOR="$__VIEWSTATEGENERATOR" \
+         --data-urlencode __VIEWSTATEENCRYPTED="$__VIEWSTATEENCRYPTED" \
+         --data-urlencode __EVENTVALIDATION="$__EVENTVALIDATION" \
+         -data-urlencode tep_name="$tep_name" \
+         --data-urlencode ddlPageCount="$ddlPageCount" "$url"
 
 
 
