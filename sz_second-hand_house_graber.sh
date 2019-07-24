@@ -33,8 +33,6 @@ fi
 dingding="https://oapi.dingtalk.com/robot/send?access_token=02aea34eb941523a5eb7035f2e97fa978fe345844ff2f3410901d35a5e267161"
 cookie="graber.cookie"
 
-date > "$entryFile"
-
 updateParameters()
 {
 lastLine=`echo "$tmp" | sed '$p' -n`
@@ -61,6 +59,10 @@ init()
 }
 
 init
+if [ -z "$totalEntry" ]; then
+  exit 1
+fi
+date > "$entryFile"
 
 data="--data-urlencode"
 method="-X POST"
