@@ -9,9 +9,10 @@ txtCode=$1
 checkCode=
 BtCheck="核对"
 
-img=
-imgurl=http://zjj.sz.gov.cn/ris/szfdc/MLS/
-imgSelector="img.CodeImg"
+cookie="verify.cookie"
+safecodeFile="safecode.jpg"
+safecodeUrl=http://zjj.sz.gov.cn/ris/szfdc/MLS/SafeCode.aspx
+safecode=
 
 updateParameters()
 {
@@ -25,9 +26,10 @@ __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
 
 init()
 {
-  tmp=`curl -s "$url" | hxnormalize -x` 
+  tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   updateParameters "$tmp"
-  echo "$tmp" | hxselect "$imgSelector" | hxpipe |  grep 
+  curl -b "$cookie" -o "$safecodeFile" -s "$safecodeUrl"
+  safecode=`./baidu_ocr -f $safecodeFile -l 0`
 }
 
 init
@@ -36,38 +38,17 @@ data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
 option="-s"
-i=1
-while [[ $entryCounter -lt $totalEntry ]]; do
 tmp=`curl $option $head $method   \
-         $data "__EVENTTARGET=$__EVENTTARGET" \
-         $data "scriptManager2=$scriptManager2" \
-         $data "__EVENTARGUMENT=$i" \
-         $data "__LASTFOCUS=$__LASTFOCUS" \
          $data "__VIEWSTATE=$__VIEWSTATE" \
          $data "__VIEWSTATEGENERATOR=$__VIEWSTATEGENERATOR" \
          $data "__VIEWSTATEENCRYPTED=$__VIEWSTATEENCRYPTED" \
          $data "__EVENTVALIDATION=$__EVENTVALIDATION" \
-         $data "tep_name=$tep_name" \
-         $data "ddlPageCount=$ddlPageCount" "$url" | hxnormalize -x`
-echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
-  | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p' >> "$logFile"
+         $data "txtCode=$txtCode" \
+         $data "checkCode=$checkCode" \
+         $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
+echo  "$tmp" 
 updateParameters "$tmp"
-i=`expr $i + 1`
-entryCounter=`expr $entryCounter + $ddlPageCount`
-done
 
-echo $totalEntry >> "$entryFile"
-echo "i=$i" >> "$entryFile"
-echo "entryCounter=$entryCounter" >> "$entryFile"
-date >> "$entryFile"
-
-curl -s  "$dingding" \
-   -H 'Content-Type: application/json' \
-   -d '{"msgtype": "text", 
-        "text": {
-             "content": "grab done!"
-        }
-      }'
 
 
 

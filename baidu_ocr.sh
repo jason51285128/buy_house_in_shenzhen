@@ -5,13 +5,15 @@ help()
     usage: ./baidu_ocr.sh -f file -l level -a AK -s SK -b dir.file
     -f: specify picture directory or file for query;
     -l: api level, 0, general_basic, 1, accurate_basic;
-    -a: AK;
-    -s: SK;
+    -a: AK, default: "4hQUcQ0Nh5rB3cgN6VQUGm9X";
+    -s: SK, default: "iKo4eHE5OCiYFzgl5FkLph2UnYUXFjd5";
     -b: break point
 HERE
 }
 
 level=0
+ak="4hQUcQ0Nh5rB3cgN6VQUGm9X"
+sk="iKo4eHE5OCiYFzgl5FkLph2UnYUXFjd5"
 while getopts "f:l:a:s:hb:" arg
 do
     case $arg in
@@ -67,20 +69,14 @@ else
     exit 1
 fi 
 
-if [[ -z "$ak" || -z "$sk" ]]
+
+token=`curl --silent "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${ak}&client_secret=$sk" | jq .access_token`
+if [ $token = "null" ]
 then
-    echo "invalid AK or SK!"
-    help
+    echo "get access token failed!"
+    echo "AK=$ak"
+    echo "SK=$sk"
     exit 1
-else
-    token=`curl --silent "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${ak}&client_secret=$sk" | jq .access_token`
-    if [ $token = "null" ]
-    then
-        echo "get access token failed!"
-        echo "AK=$ak"
-        echo "SK=$sk"
-        exit 1
-    fi
 fi
 echo "token=$token"
 
