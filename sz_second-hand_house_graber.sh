@@ -26,12 +26,10 @@ date > "$entryFile"
 
 updateParameters()
 {
-__VIEWSTATE=`echo "$tmp" | hxselect "#__VIEWSTATE" \
-  | hxpipe | grep "Avalue"  | cut -d " " -f3` 
-__VIEWSTATEGENERATOR=`echo "$tmp" | hxselect "#__VIEWSTATEGENERATOR" \
-  | hxpipe | grep "Avalue"  | cut -d " " -f3`
-__EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
-  | hxpipe | grep "Avalue"  | cut -d " " -f3` 
+lastLine=`echo "$tmp" | sed '$p' -n`
+__VIEWSTATE=`echo "$lastLine" | cut -d "|" -f17`
+__VIEWSTATEGENERATOR=`echo "$lastLine" | cut -d "|" -f21`
+__EVENTVALIDATION=`echo "$lastLine" | cut -d "|" -f29`
 }
 
 init()
@@ -41,7 +39,12 @@ init()
     | w3m -dump -cols 2000 -T 'text/html' | tr -cd [0-9]`
   echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
     | w3m -dump -cols 2000 -T 'text/html' | sed -n "1p" > "$logFile"
-  updateParameters "$tmp"
+  __VIEWSTATE=`echo "$tmp" | hxselect "#__VIEWSTATE" \
+    | hxpipe | grep "Avalue"  | cut -d " " -f3` 
+  __VIEWSTATEGENERATOR=`echo "$tmp" | hxselect "#__VIEWSTATEGENERATOR" \
+    | hxpipe | grep "Avalue"  | cut -d " " -f3`
+  __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
+    | hxpipe | grep "Avalue"  | cut -d " " -f3` 
 }
 
 init
@@ -49,10 +52,17 @@ init
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
-option="-b $cookie -s"
+head1="--header X-MicrosoftAjax:Delta=true"
+head2="--header Accept:*/*"
+head3="--header Accept-Encoding:gzip,deflate"
+head4="--header Accept-Language:zh-CN,zh;q=0.9"
+head5="--header Cache-Control:no-cache"
+head6="--header Connection:keep-alive"
+head7="--header User-Agent:Mozilla/5.0%20(Windows%20NT%2010.0;%20WOW64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/75.0.3770.142%20Safari/537.36"
+option="-b $cookie -v"
 i=1
 while [[ $entryCounter -lt $totalEntry ]]; do
-tmp=`curl $option $head $method   \
+tmp=`curl $option $head $head1 $head2 $head3 $head4 $head5 $head6 $head7 $method   \
          $data "__EVENTTARGET=$__EVENTTARGET" \
          $data "scriptManager2=$scriptManager2" \
          $data "__EVENTARGUMENT=$i" \
@@ -62,10 +72,34 @@ tmp=`curl $option $head $method   \
          $data "__VIEWSTATEENCRYPTED=$__VIEWSTATEENCRYPTED" \
          $data "__EVENTVALIDATION=$__EVENTVALIDATION" \
          $data "tep_name=$tep_name" \
-         $data "ddlPageCount=$ddlPageCount" "$url" | hxnormalize -x`
+         $data "ddlPageCount=$ddlPageCount" "$url"`
+if [ $? -ne 0 ]; then
+echo "exit: $?"
+curl -s  "$dingding" \
+   -H 'Content-Type: application/json' \
+   -d '{"msgtype": "text", 
+        "text": {
+             "content": "error in grab!"
+        }
+      }'
+exit 1
+fi
+if [ -z "$tmp" ]; then
+echo "exit $?"
+curl -s  "$dingding" \
+   -H 'Content-Type: application/json' \
+   -d '{"msgtype": "text", 
+        "text": {
+             "content": "error in grab!"
+        }
+      }'
+exit 1
+fi
+updateParameters "$tmp"
+tmp=`echo "$tmp" | hxnormalize -x`
+echo $i >> "$logFile"
 echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
   | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p' >> "$logFile"
-updateParameters "$tmp"
 i=`expr $i + 1`
 entryCounter=`expr $entryCounter + $ddlPageCount`
 done
@@ -82,6 +116,3 @@ curl -s  "$dingding" \
              "content": "grab done!"
         }
       }'
-
-
-
