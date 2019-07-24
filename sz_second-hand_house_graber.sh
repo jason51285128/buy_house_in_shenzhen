@@ -24,7 +24,7 @@ logFile=graber_`date +%F_%R_%S`.log
 entryFile="total.entry"
 entryCounter=0
 i=1
-if [ -n $breakMode ]; then
+if [ -n "$breakMode" ]; then
 lastLine=`sed '$p' -n "$entryFile"`
 i=`echo "$lastLine" | cut -d " " -f2`
 entryCounter=`echo "$lastLine" | cut -d " " -f3`
@@ -48,7 +48,7 @@ init()
   tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   totalEntry=`echo "$tmp" | hxselect "$totalEntrySelector" \
     | w3m -dump -cols 2000 -T 'text/html' | tr -cd [0-9]`
-  if [ -z $breakMode ]; then
+  if [ -z "$breakMode" ]; then
   echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
     | w3m -dump -cols 2000 -T 'text/html' | sed -n "1p" > "$logFile"
   fi
