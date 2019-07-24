@@ -12,13 +12,24 @@ __EVENTVALIDATION=
 tep_name=
 ddlPageCount=20
 
+breakMode=
+if [ "$1" = "-c" ]; then
+breakMode="true"
+fi
 totalEntry=
-entryCounter=0
 totalEntrySelector="div.titebox.right span.f14.left"
 houseTableSelector="table.table.ta-c.bor-b-1.table-white"
 tmp=
 logFile=graber_`date +%F_%R_%S`.log
 entryFile="total.entry"
+entryCounter=0
+i=1
+if [ -n $breakMode ]; then
+lastLine=`sed '$p' -n "$entryFile"`
+i=`echo "$lastLine" | cut -d " " -f2`
+entryCounter=`echo "$lastLine" | cut -d " " -f3`
+logFile=`echo "$lastLine" | cut -d " " -f4`
+fi
 dingding="https://oapi.dingtalk.com/robot/send?access_token=02aea34eb941523a5eb7035f2e97fa978fe345844ff2f3410901d35a5e267161"
 cookie="graber.cookie"
 
@@ -37,8 +48,10 @@ init()
   tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   totalEntry=`echo "$tmp" | hxselect "$totalEntrySelector" \
     | w3m -dump -cols 2000 -T 'text/html' | tr -cd [0-9]`
+  if [ -z $breakMode ]; then
   echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
     | w3m -dump -cols 2000 -T 'text/html' | sed -n "1p" > "$logFile"
+  fi
   __VIEWSTATE=`echo "$tmp" | hxselect "#__VIEWSTATE" \
     | hxpipe | grep "Avalue"  | cut -d " " -f3` 
   __VIEWSTATEGENERATOR=`echo "$tmp" | hxselect "#__VIEWSTATEGENERATOR" \
@@ -60,7 +73,6 @@ head5="--header Cache-Control:no-cache"
 head6="--header Connection:keep-alive"
 head7="--header User-Agent:Mozilla/5.0%20(Windows%20NT%2010.0;%20WOW64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/75.0.3770.142%20Safari/537.36"
 option="-b $cookie -v"
-i=1
 while [[ $entryCounter -lt $totalEntry ]]; do
 tmp=`curl $option $head $head1 $head2 $head3 $head4 $head5 $head6 $head7 $method   \
          $data "__EVENTTARGET=$__EVENTTARGET" \
@@ -82,6 +94,7 @@ curl -s  "$dingding" \
              "content": "error in grab!"
         }
       }'
+echo "1 $i $entryCounter $logFile" >> "$entryFile"
 exit 1
 fi
 if [ -z "$tmp" ]; then
@@ -93,6 +106,7 @@ curl -s  "$dingding" \
              "content": "error in grab!"
         }
       }'
+echo "1 $i $entryCounter $logFile" >> "$entryFile"
 exit 1
 fi
 updateParameters "$tmp"
@@ -105,9 +119,9 @@ entryCounter=`expr $entryCounter + $ddlPageCount`
 done
 
 echo $totalEntry >> "$entryFile"
-echo "i=$i" >> "$entryFile"
-echo "entryCounter=$entryCounter" >> "$entryFile"
 date >> "$entryFile"
+echo "0 $i $entryCounter $logFile" >> "$entryFile"
+
 
 curl -s  "$dingding" \
    -H 'Content-Type: application/json' \
