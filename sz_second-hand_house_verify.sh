@@ -29,7 +29,7 @@ init()
   tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   updateParameters "$tmp"
   curl -b "$cookie" -o "$safecodeFile" -s "$safecodeUrl"
-  safecode=`./baidu_ocr -f $safecodeFile -l 0`
+  safecode=`./baidu_ocr.sh -f $safecodeFile -l 0`
 }
 
 init
