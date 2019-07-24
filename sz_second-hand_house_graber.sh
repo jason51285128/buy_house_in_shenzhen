@@ -20,6 +20,7 @@ tmp=
 logFile=graber_`date +%F_%R_%S`.log
 entryFile="total.entry"
 dingding="https://oapi.dingtalk.com/robot/send?access_token=02aea34eb941523a5eb7035f2e97fa978fe345844ff2f3410901d35a5e267161"
+cookie="graber.cookie"
 
 date > "$entryFile"
 
@@ -35,7 +36,7 @@ __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
 
 init()
 {
-  tmp=`curl -s "$url" | hxnormalize -x` 
+  tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   totalEntry=`echo "$tmp" | hxselect "$totalEntrySelector" \
     | w3m -dump -cols 2000 -T 'text/html' | tr -cd [0-9]`
   echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
@@ -48,7 +49,7 @@ init
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
-option="-s"
+option="-b $cookie -s"
 i=1
 while [[ $entryCounter -lt $totalEntry ]]; do
 tmp=`curl $option $head $method   \

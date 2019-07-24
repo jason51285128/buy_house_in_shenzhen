@@ -29,7 +29,7 @@ init()
   tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
   updateParameters "$tmp"
   curl -b "$cookie" -o "$safecodeFile" -s "$safecodeUrl"
-  safecode=`./baidu_ocr.sh -f $safecodeFile -l 0`
+  safecode=`./baidu_ocr.sh -f $safecodeFile -l 0 | sed '$p' -n |  cut -d "\"" -f2`
 }
 
 init
@@ -37,16 +37,17 @@ init
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
-option="-s"
-tmp=`curl $option $head $method   \
+option="-s -b $cookie"
+tmp=`curl $option $head $head1 $method   \
          $data "__VIEWSTATE=$__VIEWSTATE" \
          $data "__VIEWSTATEGENERATOR=$__VIEWSTATEGENERATOR" \
          $data "__VIEWSTATEENCRYPTED=$__VIEWSTATEENCRYPTED" \
          $data "__EVENTVALIDATION=$__EVENTVALIDATION" \
          $data "txtCode=$txtCode" \
-         $data "checkCode=$checkCode" \
+         $data "checkCode=$safecode" \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
-echo  "$tmp" 
+echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
+  | w3m -dump -cols 2000 -T 'text/html'
 updateParameters "$tmp"
 
 
