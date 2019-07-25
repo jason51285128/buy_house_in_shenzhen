@@ -7,7 +7,7 @@ dingding="https://oapi.dingtalk.com/robot/send?access_token=02aea34eb941523a5eb7
 
 internal=30
 while [ 1 ] ; do
-isTask1Alive=`ps -efl | grep "$taskName1" | grep -v grep`
+isTask1Alive=`ps -efl | grep "$taskName1" | grep -v grep | wc -l`
 if [ $isTask1Alive -eq 0 ]; then
     exitCode=`sed '$p' -n "$taskLog1" | cut -d " " -f1`
     if [ $exitCode -ne 0 ]; then
