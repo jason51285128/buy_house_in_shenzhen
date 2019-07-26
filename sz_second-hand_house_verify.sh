@@ -15,6 +15,8 @@ safecodeUrl=http://zjj.sz.gov.cn/ris/szfdc/MLS/SafeCode.aspx
 safecode=
 taskOut="verify_db"
 taskLog="house.verify"
+errMsg="verify task exit unexpectly!"
+successMsg="verify task finish!"
 
 updateParameters()
 {
@@ -42,11 +44,14 @@ init()
 
 init
 if [ "$?" != "0" ]; then
-  return
+  ./post_dingding_msg.sh "$errMsg"
+  exit 1
 fi 
 
+cp "$taskLog" "${taskLog}.backup"
+date > "$taskLog"
 grabOut="$1"
-for txtCode in `grep $grabOut "[0-9]\{12\}" | awk '{print $7}'`; do
+for txtCode in `awk '/[0-9]{12}/ {if (NF < 9) {print $6}  else {print $7}}' "$grabOut"`; do
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
@@ -60,14 +65,20 @@ tmp=`curl $option $head $head1 $method   \
          $data "checkCode=$safecode" \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
 if [ -z "$tmp" ]; then
-echo "1 $txtCode" > "$taskLog"
+./post_dingding_msg.sh  "$errMsg"
+echo "1 $txtCode" >> "$taskLog"
 exit 1
 fi
 echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
   | w3m -dump -cols 2000 -T 'text/html' > "$taskOut/$txtCode"
 updateParameters "$tmp"
+if [ "$?" != "0" ]; then
+  ./post_dingding_msg.sh "$errMsg"
+  exit 1
+fi
 done
 
-
-
-
+echo "0 $txtCode" >> "$taskLog" 
+date >> "$taskLog"
+./post_dingding_msg.sh  "$successMsg"
+rm -rf "${taskLog}.backup"
