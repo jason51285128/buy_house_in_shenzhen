@@ -17,6 +17,15 @@ taskOut="verify_db"
 taskLog="house.verify"
 errMsg="verify task exit unexpectly!"
 successMsg="verify task finish!"
+mode="$1"
+lastTxtCode=
+if [ "$mode" = "-c" ]; then
+  lastTxtCode=`cat $taskLog | cut -d " " -f2`
+  if [ -z "$lastTxtCode" ]; then
+    ./post_dingding_msg.sh "$errMsg"
+    exit 1
+  fi
+fi
 
 updateParameters()
 {
@@ -50,8 +59,13 @@ fi
 
 cp "$taskLog" "${taskLog}.backup"
 date > "$taskLog"
-grabOut="$1"
+grabOut="$2"
 for txtCode in `awk '/[0-9]{12}/ {if (NF < 9) {print $6}  else {print $7}}' "$grabOut"`; do
+if [ "$mode" -c ]; then
+  if [ "$txtCode" != "$lastTxtCode" ]; then
+  continue
+  fi
+fi
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
@@ -66,7 +80,7 @@ tmp=`curl $option $head $head1 $method   \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
 if [ -z "$tmp" ]; then
 ./post_dingding_msg.sh  "$errMsg"
-echo "1 $txtCode" >> "$taskLog"
+echo "1 $txtCode $grabOut" >> "$taskLog"
 exit 1
 fi
 echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
@@ -74,6 +88,7 @@ echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
 updateParameters "$tmp"
 if [ "$?" != "0" ]; then
   ./post_dingding_msg.sh "$errMsg"
+  echo "1 $txtCode $grabOut" >> "$taskLog"
   exit 1
 fi
 done
