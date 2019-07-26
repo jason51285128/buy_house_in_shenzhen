@@ -11,6 +11,7 @@ ak=VrazWXUeiaOslNyhNUhRMTaGOeDXPw5a
 
 taskOut=location_db
 taskLog=query.location
+location=
 
 exitCode0="0 finish!"
 exitCode1="1 parameter parse failed in continue mode!"
@@ -36,7 +37,11 @@ fi
 getLocation()
 {
     key=`echo -n "$1" | od -t x1 -A n -w1000|tr " " "%" | tr [a-z] [A-Z]`
-    curl -s "$url?query=$key&tag=$tag&city_limit=$city_limit&page_size=$page_size&region=$region&output=$output&ak=$ak" 
+    location=`curl -s "$url?query=$key&tag=$tag&city_limit=$city_limit&page_size=$page_size&region=$region&output=$output&ak=$ak"`
+    status=`echo "$location" | jq .status`
+    if [ "$status" != "0" ]; then
+      location=
+    fi
 }
 
 cp -f "$taskLog" "$taskLog.backup"
@@ -50,7 +55,7 @@ for name_tab_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"."$6}  else {print
       continue
       fi
     fi
-    location=`getLocation $houseName` 
+    getLocation "$houseName" 
     if [ -z "$location" ]; then
       ./post_dingding_msg.sh "$exitMsg $exitCode2"
       echo "1 $houseCode $grabOut" >> "$taskLog" 
