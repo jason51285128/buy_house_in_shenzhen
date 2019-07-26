@@ -43,8 +43,8 @@ cp -f "$taskLog" "$taskLog.backup"
 date > "$taskLog"
 mkdir -p $taskOut
 for name_tab_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"\t"$6}  else {print $1"\t"$7}}' "$grabOut"`; do
-    houseName=`echo "$name_tab_code" | cut -d "\t" -f1`
-    houseCode=`echo "$name_tab_code" | cut -d "\t" -f2`
+    houseName=`echo "$name_tab_code" | cut  -f1`
+    houseCode=`echo "$name_tab_code" | cut  -f2`
     if [ "$mode" -c ]; then
       if [ "$houseCode" != "$lastHouseCode" ]; then
       continue
