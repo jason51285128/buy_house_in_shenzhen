@@ -1,17 +1,17 @@
 #!/bin/bash
 
-url=http://api.map.baidu.com/place/v2/search
-key=
-tag=`echo -n "住宅区" | od -t x1 -A n -w1000|tr " " "%" | tr [a-z] [A-Z]`
+url=https://restapi.amap.com/v3/place/text
+keywords=
 city_limit=true
 page_size=1
-region=`echo -n "深圳" | od -t x1 -A n -w1000|tr " " "%"| tr [a-z] [A-Z]`
+region=0755
 output=json
-ak=VrazWXUeiaOslNyhNUhRMTaGOeDXPw5a
+ak=40bfa5e93c6f9b3f7f2d7eb90f3e3c6c
 
 taskOut=location_db
 taskLog=query.location
 location=
+successStatus=1
 
 exitCode0="0 finish!"
 exitCode1="1 parameter parse failed in continue mode!"
@@ -36,10 +36,10 @@ fi
 
 getLocation()
 {
-    key=`echo -n "$1" | od -t x1 -A n -w1000|tr " " "%" | tr [a-z] [A-Z]`
-    location=`curl -s "$url?query=$key&tag=$tag&city_limit=$city_limit&page_size=$page_size&region=$region&output=$output&ak=$ak"`
+    keywords=`echo -n "$1" | od -t x1 -A n -w1000|tr " " "%" | tr [a-z] [A-Z]`
+    location=`curl -s "$url?keywords=$keywords&city=$region&types=120000&city_limit=$city_limit&offset=$page_size&output=$output&key=$ak"`
     status=`echo "$location" | jq .status`
-    if [ "$status" != "0" ]; then
+    if [ "$status" != "$successStatus" ]; then
       location=
     fi
 }
@@ -62,6 +62,7 @@ for name_tab_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"."$6}  else {print
       exit 1
     fi
     echo "$location" > "$taskOut/$houseCode"
+    sleep 0.1
 done
 
 echo "0 $houseCode $grabOut" >> "$taskLog" 
