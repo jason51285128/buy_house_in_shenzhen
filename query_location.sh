@@ -38,7 +38,7 @@ getLocation()
 {
     keywords=`echo -n "$1" | od -t x1 -A n -w1000|tr " " "%" | tr [a-z] [A-Z]`
     location=`curl -s "$url?keywords=$keywords&city=$region&types=120000&city_limit=$city_limit&offset=$page_size&output=$output&key=$ak"`
-    status=`echo "$location" | jq .status`
+    status=`echo "$location" | jq .status | cut -d "\"" -f2`
     if [ "$status" != "$successStatus" ]; then
       location=
     fi
