@@ -130,7 +130,7 @@ Action00010()
 {
   #发送自荐报文
   ts=`date +%Y-%m-%d-%H-%M-%S`  
-  echo "$MSG_TYPE_SELF_RECOMMENDATION $myAddr $myId $ts" >> $msgout
+  echo "$MSG_TYPE_SELF_RECOMMENDATION $myAddr $myId $ts" >& $msgout
 }
 
 Action01010()
@@ -170,33 +170,34 @@ do
 done
 parseConfig
 
-# create msg fifo
-msginFile=/tmp/`date +%N`
-msgin=3
-msgoutFile=/tmp/`date +%N`
-msgout=4
-mkfifo $msginFile
-mkfifo $msgoutFile
-exec 3<>"$msginFile"
-exec 4<>"$msgoutFile"
-rm -f $msginFile $msgoutFile
-trap "exec 3>&-; exec 4>&-; exit 0" TERM INT
-
 #crate lock
 lockFile=/tmp/`date +%N`
-lock=5
-exec 5>$lockFile
+lock=3
+exec 3>$lockFile
+
+# create msg fifo
+msginFile=/tmp/`date +%N`
+msgoutFile=/tmp/`date +%N`
+mkfifo $msginFile
+mkfifo $msgoutFile
 
 #start msg center
 { 
+  exec 4<$msgoutFile
+  exec 5>$msginFile
+  rm -f $msginFile $msgoutFile
   ncat $broker 0<&4 1>&3 2>/dev/null
 } &
 
 #recevie msg
 #msgType  senderAddr senderId sendts msgBody
 {
+  exec 4<$msginFile
   while ((1)); do
-    read -u $msgin msgType senderAddr senderId sendts msgBody 
+    read -u 4 msgType senderAddr senderId sendts msgBody 
+    if (( $? != 0 )); then
+      exit 0
+    fi
     case $msgType in
       $MSG_TYPE_LEADER_HEART_BEAT)
       ;;
@@ -209,13 +210,21 @@ exec 5>$lockFile
   done
 } &
 
+#open msgout pipe
+msgout=4
+exec 4>$msgoutFile
+
+#signal handle
+trap "exec 4>&-; exit 0" TERM INT
+
+
 #age....
 tsn=0 #当前时刻，以ms为单位
 tsl=`getMsTs` #上一个时刻，以ms为单位
 while ((1)); do
   tsn=`getMsTs`
   if (( tsn - tsl < agePeriod )); then
-    sleep 1 
+    sleep 0.1 
     continue
   fi
   ((tsl=tsn))
@@ -248,7 +257,7 @@ while ((1)); do
     #切换成leader，快发一帧心跳
     if (( state == LEADER )); then
       ts=`date +%Y-%m-%d-%H-%M-%S`
-      echo "$MSG_TYPE_LEADER_HEART_BEAT $myAddr $myId $ts" >> $msgout
+      echo "$MSG_TYPE_LEADER_HEART_BEAT $myAddr $myId $ts" >& $msgout
     fi
   fi
 
@@ -256,7 +265,7 @@ while ((1)); do
     ((heartbeatTimer=0))
     if (( state == LEADER )); then
       ts=`date +%Y-%m-%d-%H-%M-%S`
-      echo "$MSG_TYPE_LEADER_HEART_BEAT $myAddr $myId $ts" >> $msgout
+      echo "$MSG_TYPE_LEADER_HEART_BEAT $myAddr $myId $ts" >& $msgout
     fi
   fi
   echo $oldstate $c0 $c1 $c2 $state `date +%Y-%m-%d-%H-%M-%S`
