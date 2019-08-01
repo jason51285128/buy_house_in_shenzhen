@@ -9,7 +9,10 @@ heartbeatThreshold=5 #leader心跳报文发送阈值，表示多少倍老化周�
 checkThreshold=15 #检测定时器阈值，表示多少倍老化周期，3倍心跳报文阈值
 broker="0.0.0.0 8080"
 myAddr="0.0.0.0:8081"
-myId=
+myId=0
+curLeaderAddr=
+curLeaderId=0 
+
 stateTable=(0 0 1 0 0 0 0 0 
             1 1 2 0 1 1 0 0
             2 2 2 2 2 2 0 0)
@@ -30,19 +33,6 @@ LEADER=2
 CheckTimer=0 #检测定时器
 heartbeatTimer=0 #心跳定时器
 state=$FOLLOWER
-RecommenderAddr=
-RecommenderId=
-msgType=
-senderAddr=
-senderId=
-sendts=
-msgBody=
-
-#lock resource
-leaderHeartbeatPkgCounter=0
-selfRecommendationPkgCounter=0
-curLeaderAddr=
-curLeaderId=0 
 
 #function definition
 help()
@@ -94,31 +84,26 @@ parseConfig()
     myAddr="$tmp"
   fi
   myId=`getMyId`
-  RecommenderId=$myId
 }
 
 onLeaderHeartbeatPktRcve()
 {
   flock $lock
-  if [[ "$curLeaderAddr" != "$senderAddr" || (( curLeaderId != senderId )) ]]
-  then
-    curLeaderAddr="$senderAddr"
-    curLeaderId="$senderId"
-  fi
-  (( leaderHeartbeatPkgCounter++ ))
+  read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
+  ((leaderHeartbeatPkgCounter++, leaderid=senderId, leadAddr=senderAddr))
+  echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" >& $receiveStatus 
   flock -u $lock
 }
 
 onSelfRecommendationPktRcve()
 {
-  if (( senderId > RecommenderId )); then
-    RecommenderAddr="$senderAddr"
-    (( RecommenderId=senderId ))
-    flock $lock
-    (( selfRecommendationPkgCounter++ ))
-    flock -u $lock
+  flock $lock
+  read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
+  if (( senderId > recommenderId )); then
+    ((selfRecommendationPkgCounter++, recommenderId=senderId, recommendAddr=senderAddr))
+    echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" >& $receiveStatus 
   fi
-  
+  flock -u $lock 
 }
 
 ActionDefault()
@@ -136,19 +121,15 @@ Action00010()
 Action01010()
 {
   #将leader置为自己
-  flock $lock
   curLeaderAddr="$myAddr"
-  curLeaderId="$myId"
-  flock -u $lock
+  ((curLeaderId=myId))
 }
 
 Action01011()
 {
   #将自荐者作为自己的leader
-  flock $lock
-  curLeaderAddr="$RecommenderAddr"
-  (( curLeaderId=RecommenderId ))
-  flock -u $lock
+  curLeaderAddr="$recommendAddr"
+  (( curLeaderId=recommenderId ))
 }
 
 #start...
@@ -181,6 +162,11 @@ msgoutFile=/tmp/`date +%N`
 mkfifo $msginFile
 mkfifo $msgoutFile
 
+# create receive status table
+#format: leaderHeartbeatPktCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr
+receiveStatusTable="lerst" # leader election receive status table
+touch $receiveStatusTable
+
 #start msg center
 { 
   exec 4<$msgoutFile
@@ -192,7 +178,16 @@ mkfifo $msgoutFile
 #recevie msg
 #msgType  senderAddr senderId sendts msgBody
 {
+  msgType=
+  senderAddr=
+  senderId=
+  sendts=
+  msgBody=
+
   exec 4<$msginFile
+  exec 5<>$receiveStatusTable
+  receiveStatus=5
+
   while ((1)); do
     read -u 4 msgType senderAddr senderId sendts msgBody 
     if (( $? != 0 )); then
@@ -200,8 +195,10 @@ mkfifo $msgoutFile
     fi
     case $msgType in
       $MSG_TYPE_LEADER_HEART_BEAT)
+        onLeaderHeartbeatPktRcve
       ;;
       $MSG_TYPE_SELF_RECOMMENDATION)
+        onSelfRecommendationPktRcve
       ;;
       ?)
       continue
@@ -214,8 +211,12 @@ mkfifo $msgoutFile
 msgout=4
 exec 4>$msgoutFile
 
+#open receive status table for RW
+receiveStatus=5
+exec 5<>$receiveStatusTable
+
 #signal handle
-trap "exec 4>&-; exit 0" TERM INT
+trap "exec 4>&-; exec 5>&-; rm -f $receiveStatusTable; exit 0" TERM INT
 
 
 #age....
@@ -238,12 +239,15 @@ while ((1)); do
   fi
   if ((c1 == 1)); then
     flock $lock
-      if (( leaderHeartbeatPkgCounter > 0 )); then
-        (( c0=1, leaderHeartbeatPkgCounter=0 ))
-      fi
-      if (( selfRecommendationPkgCounter > 0 )); then
-        ((c2=1, selfRecommendationPkgCounter=0))
-      fi
+    read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
+    if (( leaderHeartbeatPkgCounter > 0 )); then
+      (( c0=1, curLeaderId=leaderid ))
+      curLeaderAddr=$leadAddr
+    fi
+    if (( selfRecommendationPkgCounter > 0 && recommenderId > myId )); then
+      ((c2=1))
+    fi
+    echo "0 0 0  0 0 0" >& $receiveStatus 
     flock -u $lock
   fi
 
