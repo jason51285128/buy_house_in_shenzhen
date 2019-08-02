@@ -86,19 +86,21 @@ parseConfig()
 onLeaderHeartbeatPktRcve()
 {
   flock $lock
-  read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
-  ((leaderHeartbeatPkgCounter++, leaderid=senderId, leadAddr=senderAddr))
-  echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" >& $receiveStatus 
+  read leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr < $receiveStatusTable
+  ((leaderHeartbeatPkgCounter++, leaderid=senderId ))
+  leadAddr="$senderAddr"
+  echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" > $receiveStatusTable
   flock -u $lock
 }
 
 onSelfRecommendationPktRcve()
 {
   flock $lock
-  read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
+  read leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr < $receiveStatusTable 
   if (( senderId > recommenderId )); then
-    ((selfRecommendationPkgCounter++, recommenderId=senderId, recommendAddr=senderAddr))
-    echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" >& $receiveStatus 
+    ((selfRecommendationPkgCounter++, recommenderId=senderId ))
+    recommendAddr="$senderAddr"
+    echo "$leaderHeartbeatPkgCounter $leaderid $leadAddr $selfRecommendationPkgCounter $recommenderId $recommendAddr" > $receiveStatusTable
   fi
   flock -u $lock 
 }
@@ -159,37 +161,31 @@ msgoutFile=/tmp/`date +%N`
 mkfifo $msginFile
 mkfifo $msgoutFile
 
-# create receive status table
+# create and init receive status table
 #format: leaderHeartbeatPktCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr
 receiveStatusTable="lerst.$myId" # leader election receive status table
 touch $receiveStatusTable
+echo "0 0 0 0 0 0" > $receiveStatusTable
 
 #start msg center
 { 
   exec 4<$msgoutFile
   exec 5>$msginFile
   rm -f $msginFile $msgoutFile
-  ncat $broker 0<&4 1>&3 2>/dev/null
+  ncat $broker 0<&4 1>&5 2>/dev/null
 } &
 
 #recevie msg
 #msgType  senderAddr senderId sendts msgBody
 {
-  msgType=
-  senderAddr=
-  senderId=
-  sendts=
-  msgBody=
-
   exec 4<$msginFile
-  exec 5<>$receiveStatusTable
-  receiveStatus=5
 
   while ((1)); do
     read -u 4 msgType senderAddr senderId sendts msgBody 
     if (( $? != 0 )); then
       exit 0
     fi
+    echo R:`date +%Y-%m-%d-%H-%M-%S` $msgType $senderAddr $senderId $sendts $msgBody
     case $msgType in
       $MSG_TYPE_LEADER_HEART_BEAT)
         onLeaderHeartbeatPktRcve
@@ -207,10 +203,6 @@ touch $receiveStatusTable
 #open msgout pipe
 msgout=4
 exec 4>$msgoutFile
-
-#open receive status table for RW
-receiveStatus=5
-exec 5<>$receiveStatusTable
 
 #signal handle
 trap "exec 4>&-; exec 5>&-; rm -f $receiveStatusTable; exit 0" TERM INT
@@ -235,15 +227,15 @@ while ((1)); do
   fi
   if ((c1 == 1)); then
     flock $lock
-    read -u $receiveStatus leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr 
+    read leaderHeartbeatPkgCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr < $receiveStatusTable
     if (( leaderHeartbeatPkgCounter > 0 )); then
       (( c0=1, curLeaderId=leaderid ))
-      curLeaderAddr=$leadAddr
+      curLeaderAddr="$leadAddr"
     fi
     if (( selfRecommendationPkgCounter > 0 && recommenderId > myId )); then
       ((c2=1))
     fi
-    echo "0 0 0 0 0 0" >& $receiveStatus 
+    echo "0 0 0 0 0 0" > $receiveStatusTable 
     flock -u $lock
   fi
 
@@ -268,5 +260,4 @@ while ((1)); do
       echo "$MSG_TYPE_LEADER_HEART_BEAT $myAddr $myId $ts" >& $msgout
     fi
   fi
-  echo $oldstate $c0 $c1 $c2 $state `date +%Y-%m-%d-%H-%M-%S`
 done
