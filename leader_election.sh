@@ -54,11 +54,8 @@ getMsTs()
 getMyId()
 {
   port=`echo $myAddr | cut -d ":" -f2`
-  ip0=`echo $myAddr | cut -d ":" -f1 | cut -d "." -f1`
-  ip1=`echo $myAddr | cut -d ":" -f1 | cut -d "." -f2`
-  ip2=`echo $myAddr | cut -d ":" -f1 | cut -d "." -f3`
-  ip3=`echo $myAddr | cut -d ":" -f1 | cut -d "." -f4`
-  echo $(( (ip0 << 19) + (ip1 << 18) + (ip2 << 17) + (ip3 << 16) + port ))
+  ip=(`echo $myAddr | cut -d ":" -f1 | sed 's/\./ /g'`)
+  echo $(( (ip[0] << 19) + (ip[1] << 18) + (ip[2] << 17) + (ip[3] << 16) + port ))
 }
 
 parseConfig()
@@ -218,7 +215,6 @@ exec 5<>$receiveStatusTable
 #signal handle
 trap "exec 4>&-; exec 5>&-; rm -f $receiveStatusTable; exit 0" TERM INT
 
-
 #age....
 tsn=0 #当前时刻，以ms为单位
 tsl=`getMsTs` #上一个时刻，以ms为单位
@@ -247,12 +243,12 @@ while ((1)); do
     if (( selfRecommendationPkgCounter > 0 && recommenderId > myId )); then
       ((c2=1))
     fi
-    echo "0 0 0  0 0 0" >& $receiveStatus 
+    echo "0 0 0 0 0 0" >& $receiveStatus 
     flock -u $lock
   fi
 
-  ((oldstate=state))  
-  key=$(( (state << 3) + (c0 << 2) + (c1 << 1) + $c2 )) 
+  ((oldstate=state))
+  ((key = (state << 3) + (c0 << 2) + (c1<<1) + c2))
   state=${stateTable[$key]}
   action=${actionTable[$key]}
   $action
