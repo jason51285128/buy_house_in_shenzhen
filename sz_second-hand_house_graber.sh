@@ -12,26 +12,16 @@ __EVENTVALIDATION=
 tep_name=
 ddlPageCount=20
 
-breakMode=
-if [ "$1" = "-c" ]; then
-breakMode="true"
-fi
-totalEntry=
-totalEntrySelector="div.titebox.right span.f14.left"
 houseTableSelector="table.table.ta-c.bor-b-1.table-white"
 tmp=
-logFile=graber_`date +%F_%R_%S`.log
-entryFile="total.entry"
-entryCounter=0
-i=1
-if [ -n "$breakMode" ]; then
-lastLine=`sed '$p' -n "$entryFile"`
-i=`echo "$lastLine" | cut -d " " -f2`
-entryCounter=`echo "$lastLine" | cut -d " " -f3`
-logFile=`echo "$lastLine" | cut -d " " -f4`
+scriptName="sz_second-hand_house_graber"
+cookie=${scriptName}_`date +%N`
+cookie=`echo "$cookie" | md5sum | cut -d " " -f1`
+if (( $# < 2 )); then
+exit 1
 fi
-dingding="https://oapi.dingtalk.com/robot/send?access_token=02aea34eb941523a5eb7035f2e97fa978fe345844ff2f3410901d35a5e267161"
-cookie="graber.cookie"
+start=$1
+end=$2
 
 updateParameters()
 {
@@ -44,12 +34,6 @@ __EVENTVALIDATION=`echo "$lastLine" | cut -d "|" -f29`
 init()
 {
   tmp=`curl -c "$cookie" -s "$url" | hxnormalize -x` 
-  totalEntry=`echo "$tmp" | hxselect "$totalEntrySelector" \
-    | w3m -dump -cols 2000 -T 'text/html' | tr -cd [0-9]`
-  if [ -z "$breakMode" ]; then
-  echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
-    | w3m -dump -cols 2000 -T 'text/html' | sed -n "1p" > "$logFile"
-  fi
   __VIEWSTATE=`echo "$tmp" | hxselect "#__VIEWSTATE" \
     | hxpipe | grep "Avalue"  | cut -d " " -f3` 
   __VIEWSTATEGENERATOR=`echo "$tmp" | hxselect "#__VIEWSTATEGENERATOR" \
@@ -59,10 +43,6 @@ init()
 }
 
 init
-if [ -z "$totalEntry" ]; then
-  exit 1
-fi
-date > "$entryFile"
 
 data="--data-urlencode"
 method="-X POST"
@@ -74,8 +54,8 @@ head4="--header Accept-Language:zh-CN,zh;q=0.9"
 head5="--header Cache-Control:no-cache"
 head6="--header Connection:keep-alive"
 head7="--header User-Agent:Mozilla/5.0%20(Windows%20NT%2010.0;%20WOW64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/75.0.3770.142%20Safari/537.36"
-option="-b $cookie -v"
-while [[ $entryCounter -lt $totalEntry ]]; do
+option="-b $cookie -s"
+for (( i = $start; i < $end; i++ )); do 
 tmp=`curl $option $head $head1 $head2 $head3 $head4 $head5 $head6 $head7 $method   \
          $data "__EVENTTARGET=$__EVENTTARGET" \
          $data "scriptManager2=$scriptManager2" \
@@ -87,48 +67,13 @@ tmp=`curl $option $head $head1 $head2 $head3 $head4 $head5 $head6 $head7 $method
          $data "__EVENTVALIDATION=$__EVENTVALIDATION" \
          $data "tep_name=$tep_name" \
          $data "ddlPageCount=$ddlPageCount" "$url"`
-if [ $? -ne 0 ]; then
-echo "exit: $?"
-curl -s  "$dingding" \
-   -H 'Content-Type: application/json' \
-   -d '{"msgtype": "text", 
-        "text": {
-             "content": "error in grab!"
-        }
-      }'
-echo "1 $i $entryCounter $logFile" >> "$entryFile"
-exit 1
-fi
-if [ -z "$tmp" ]; then
-echo "exit $?"
-curl -s  "$dingding" \
-   -H 'Content-Type: application/json' \
-   -d '{"msgtype": "text", 
-        "text": {
-             "content": "error in grab!"
-        }
-      }'
-echo "1 $i $entryCounter $logFile" >> "$entryFile"
+if [[ "$?" != "0" || -z "$tmp" ]]; then
 exit 1
 fi
 updateParameters "$tmp"
 tmp=`echo "$tmp" | hxnormalize -x`
-echo $i >> "$logFile"
 echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
-  | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p' >> "$logFile"
-i=`expr $i + 1`
-entryCounter=`expr $entryCounter + $ddlPageCount`
+  | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p'
 done
 
-echo $totalEntry >> "$entryFile"
-date >> "$entryFile"
-echo "0 $i $entryCounter $logFile" >> "$entryFile"
-
-
-curl -s  "$dingding" \
-   -H 'Content-Type: application/json' \
-   -d '{"msgtype": "text", 
-        "text": {
-             "content": "grab done!"
-        }
-      }'
+rm -f "$cookie"

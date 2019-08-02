@@ -9,23 +9,16 @@ txtCode=
 checkCode=
 BtCheck="核对"
 
-cookie="verify.cookie"
+if (( $# < 1 )); then
+exit 1
+fi
+grabOut="$1"
+scriptName="sz_second-hand_house_verify"
+cookie=${scriptName}_`date +%N`
+cookie=`echo "$cookie" | md5sum | cut -d " " -f1`
 safecodeFile="safecode.jpg"
 safecodeUrl=http://zjj.sz.gov.cn/ris/szfdc/MLS/SafeCode.aspx
 safecode=
-taskOut="verify_db"
-taskLog="house.verify"
-errMsg="verify task exit unexpectly!"
-successMsg="verify task finish!"
-mode="$1"
-lastTxtCode=
-if [ "$mode" = "-c" ]; then
-  lastTxtCode=`cat $taskLog | cut -d " " -f2`
-  if [ -z "$lastTxtCode" ]; then
-    ./post_dingding_msg.sh "$errMsg"
-    exit 1
-  fi
-fi
 
 updateParameters()
 {
@@ -40,7 +33,7 @@ __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
     return
   fi
   safecode=`./baidu_ocr.sh -f $safecodeFile -l 0 | sed '$p' -n |  cut -d "\"" -f2`
-  if [ "$?" != "0" ]; then
+  if [[ "$?" != "0" || -z "$safecode" ]]; then
     return
   fi 
 }
@@ -53,19 +46,14 @@ init()
 
 init
 if [ "$?" != "0" ]; then
-  ./post_dingding_msg.sh "$errMsg"
   exit 1
 fi 
 
-cp "$taskLog" "${taskLog}.backup"
-date > "$taskLog"
-grabOut="$2"
+tmpout=${scriptName}_`date +%N`
+tmpout=`echo "$tmpout" | md5sum | cut -d " " -f1`
+echo "[" > $tmpout
+
 for txtCode in `awk '/[0-9]{12}/ {if (NF < 9) {print $6}  else {print $7}}' "$grabOut"`; do
-if [ "$mode" -c ]; then
-  if [ "$txtCode" != "$lastTxtCode" ]; then
-  continue
-  fi
-fi
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
@@ -79,21 +67,22 @@ tmp=`curl $option $head $head1 $method   \
          $data "checkCode=$safecode" \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
 if [ -z "$tmp" ]; then
-./post_dingding_msg.sh  "$errMsg"
-echo "1 $txtCode $grabOut" >> "$taskLog"
+rm -f $tmpout
 exit 1
 fi
-echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
-  | w3m -dump -cols 2000 -T 'text/html' > "$taskOut/$txtCode"
+value=`echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
+  | w3m -dump -cols 2000 -T 'text/html' `
+value=`echo "$value" | base64 | sed ":a;N;s/\n/\*/g;ta"`
+echo "{\"key\": \"$txtCode\", \"value\": \"$value\"}," >> $tmpout  
 updateParameters "$tmp"
 if [ "$?" != "0" ]; then
-  ./post_dingding_msg.sh "$errMsg"
-  echo "1 $txtCode $grabOut" >> "$taskLog"
+  rm -f $tmpout
   exit 1
 fi
 done
 
-echo "0 $txtCode" >> "$taskLog" 
-date >> "$taskLog"
-./post_dingding_msg.sh  "$successMsg"
-rm -rf "${taskLog}.backup"
+rm -f "$cookie"
+echo "{\"key\": \"\", \"value\": \"\"}" >> $tmpout   
+echo "]" >> $tmpout
+cat $tmpout | jq .
+rm -f $tmpout

@@ -8,31 +8,13 @@ region=0755
 output=json
 ak=40bfa5e93c6f9b3f7f2d7eb90f3e3c6c
 
-taskOut=location_db
-taskLog=query.location
 location=
 successStatus=1
 
-exitCode0="0 finish!"
-exitCode1="1 parameter parse failed in continue mode!"
-exitCode2="2 Call BAIDUmap failed!"
-exitMsg="query location exit:"
-
-mode="$1"
-grabOut="$2"
-lastHouseCode=
-if [ "$mode" = "-c" ]; then
-lastHouseCode=`cat "$taskLog" | cut -d " " -f2`
-grabOut=`cat "$taskLog" | cut -d " " -f3`
-if [ -z "$lastHouseCode" ]; then
-./post_dingding_msg.sh "$exitMsg $exitCode1"
+if (( $# < 1 )); then
 exit 1
 fi
-if [ -z "$grabOut" ]; then
-./post_dingding_msg.sh "$exitMsg $exitCode1"
-exit 1
-fi
-fi
+grabOut="$1"
 
 getLocation()
 {
@@ -44,29 +26,26 @@ getLocation()
     fi
 }
 
-cp -f "$taskLog" "$taskLog.backup"
-date > "$taskLog"
-mkdir -p $taskOut
-for name_tab_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"."$6}  else {print $1"."$7}}' "$grabOut"`; do
-    houseName=`echo -n "$name_tab_code" | cut -d "."  -f1`
-    houseCode=`echo -n "$name_tab_code" | cut -d "." -f2`
-    if [ "$mode" -c ]; then
-      if [ "$houseCode" != "$lastHouseCode" ]; then
-      continue
-      fi
-    fi
+scriptName="query_location"
+tmpout=${scriptName}_`date +%N`
+tmpout=`echo "$tmpout" | md5sum | cut -d " " -f1`
+echo "[" > $tmpout
+
+for name_dot_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"."$6}  else {print $1"."$7}}' "$grabOut"`; do
+    houseName=`echo -n "$name_dot_code" | cut -d "."  -f1`
+    houseCode=`echo -n "$name_dot_code" | cut -d "." -f2`
     getLocation "$houseName" 
     if [ -z "$location" ]; then
-      ./post_dingding_msg.sh "$exitMsg $exitCode2"
-      echo "1 $houseCode $grabOut" >> "$taskLog" 
+      rm -f $tmpout
       exit 1
     fi
-    echo "$location" > "$taskOut/$houseCode"
+    location=`echo "$location" | sed "s/^{/{\"key\":\"$houseCode\",/"`
+    location=`echo "$location" | sed "s/$/,/"`
+    echo $location >> $tmpout
     sleep 0.1
 done
 
-echo "0 $houseCode $grabOut" >> "$taskLog" 
-date >> "$taskLog"
-rm -f "$taskLog.backup"
-./post_dingding_msg.sh "$exitMsg $exitCode0"
-exit
+echo "{\"key\": \"\", \"value\": \"\"}" >> $tmpout   
+echo "]" >> $tmpout
+cat $tmpout | jq .
+rm -f $tmpout
