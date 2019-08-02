@@ -164,7 +164,7 @@ mkfifo $msgoutFile
 
 # create receive status table
 #format: leaderHeartbeatPktCounter leaderid leadAddr selfRecommendationPkgCounter recommenderId recommendAddr
-receiveStatusTable="lerst" # leader election receive status table
+receiveStatusTable="lerst.$myId" # leader election receive status table
 touch $receiveStatusTable
 
 #start msg center
