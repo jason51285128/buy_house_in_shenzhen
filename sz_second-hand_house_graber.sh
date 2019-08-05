@@ -75,5 +75,14 @@ tmp=`echo "$tmp" | hxnormalize -x`
 echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
   | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p'
 done
-
+if (( i % 100 == 0 )); then
+  sleep 30
+  init
+  continue
+fi
+if (( i % 20 == 0 )); then
+  sleep 10
+  init
+  continue
+fi
 rm -f "$cookie"
