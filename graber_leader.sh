@@ -27,7 +27,7 @@ closeAllInPipe()
 
 emptyAllSubOutFile()
 {
-  for (( i = 0; k < ${#followers[*]}; i++ )); do
+  for (( i = 0; i < ${#followers[*]}; i++ )); do
     rm -f ${followers[$i]}.out
   done
 }
