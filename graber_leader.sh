@@ -35,8 +35,8 @@ emptyAllSubOutFile()
 #parse parameter
 i=0
 for parameters in `./house_graber_split.sh "\"${followers[*]}\"" `; do
-  startPage[$i]=`echo $parameters | cut -d " " -f2`
-  endPage[$i]=`echo $parameters | cut -d " " -f3`
+  startPage[$i]=`echo $parameters | cut -d "\"" -f2 | cut -d " " -f2`
+  endPage[$i]=`echo $parameters | cut -d "\"" -f2 | cut -d " " -f3`
   ((i++))
 done
 
@@ -51,7 +51,7 @@ for (( i=0; i < ${#followers[*]}; i++ )); do
     exec 3<$msgoutFile
     exec 4>$msginFile
     host=`echo ${followers[$i]} | cut -d ":" -f1`
-    port=host=`echo ${followers[$i]} | cut -d ":" -f2`
+    port=`echo ${followers[$i]} | cut -d ":" -f2`
     ncat $host $port <&3 >&4 2>/dev/null 
   } &
 

@@ -22,6 +22,6 @@ for (( i = 0; i < ${#followers[*]}; i++ )); do
   if (( end > (totalEntry + 1) )); then
    (( end = totalEntry + 1 ))
   fi
-  echo ${followers[$i]} $start $end
+  echo "\"${followers[$i]} $start $end\""
   (( start = end ))
 done
