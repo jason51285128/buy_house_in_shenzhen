@@ -22,6 +22,9 @@ exit 1
 fi
 start=$1
 end=$2
+if (( end <= start )); then
+exit 1
+fi
 
 updateParameters()
 {
@@ -74,7 +77,6 @@ updateParameters "$tmp"
 tmp=`echo "$tmp" | hxnormalize -x`
 echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
   | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p'
-done
 if (( i % 100 == 0 )); then
   sleep 30
   init
@@ -85,4 +87,7 @@ if (( i % 20 == 0 )); then
   init
   continue
 fi
+done
+
+echo EOF
 rm -f "$cookie"
