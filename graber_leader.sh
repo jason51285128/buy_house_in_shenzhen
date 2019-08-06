@@ -45,11 +45,11 @@ for (( i=0; i < ${#followers[*]}; i++ )); do
     ncat $host $port <&3 >&4 2>/dev/null 
   } &
 
-  exec $fd<$msginFile
-  infd[$i]=$fd
-  ((fd++))
   exec $fd>$msgoutFile
   outfd[$i]=$fd
+  ((fd++))
+  exec $fd<$msginFile
+  infd[$i]=$fd
   ((fd++))
 
   rm -f $msginFile $msgoutFile
