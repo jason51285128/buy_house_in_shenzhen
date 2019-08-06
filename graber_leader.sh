@@ -14,13 +14,23 @@ fd=3
 
 #function define
 beforeExit() {
-for (( i = 0; k < ${#infd[*]}; i++ )); do
-  exec  ${infd[$i]} >& -
-done
-for (( i = 0; k < ${#followers[*]}; i++ )); do
-  rm -f ${followers[$i]}.out
-done
+  closeAllInPipe
+  emptyAllSubOutFile
 } 
+
+closeAllInPipe()
+{
+  for (( i = 0; k < ${#infd[*]}; i++ )); do
+    exec  ${infd[$i]} >& -
+  done
+}
+
+emptyAllSubOutFile()
+{
+  for (( i = 0; k < ${#followers[*]}; i++ )); do
+    rm -f ${followers[$i]}.out
+  done
+}
 
 #parse parameter
 i=0
@@ -70,6 +80,7 @@ while ((1)); do
   for (( i = 0; i < ${#infd[*]}; i++ )); do
     isover[$i]=0
   done
+  emptyAllSubOutFile
 
   #start grab
   echo "start grab task..."
