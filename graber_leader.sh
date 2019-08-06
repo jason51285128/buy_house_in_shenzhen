@@ -72,7 +72,9 @@ while ((1)); do
   done
 
   #start grab
+  echo "start grab task..."
   for (( i=0; i < ${#followers[*]}; i++ )); do
+    echo ${followers[$i]} ${startPage[$i]} ${endPage[$i]}
     echo $action ${startPage[$i]} ${endPage[$i]} >& ${outfd[$i]}
   done
 
