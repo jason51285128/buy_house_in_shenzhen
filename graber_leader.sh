@@ -21,7 +21,8 @@ beforeExit() {
 closeAllInPipe()
 {
   for (( i = 0; i < ${#infd[*]}; i++ )); do
-    exec  ${infd[$i]} >& -
+    redir="${infd[$i]}>&-"
+    eval exec $redir 
   done
 }
 
@@ -96,7 +97,7 @@ while ((1)); do
       if (( ${isover[$i]} == 1 )); then
         continue
       fi
-      read -u ${infd[$i]} -t 60
+      read -u ${infd[$i]} -t 180 
       if (( $? != 0 )); then
         isFialed=1
         break
