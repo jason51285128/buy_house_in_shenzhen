@@ -33,11 +33,11 @@ emptyAllSubOutFile()
 }
 
 #parse parameter
-i=0
-for parameters in `./house_graber_split.sh "\"${followers[*]}\"" `; do
-  startPage[$i]=`echo $parameters | cut -d "\"" -f2 | cut -d " " -f2`
-  endPage[$i]=`echo $parameters | cut -d "\"" -f2 | cut -d " " -f3`
-  ((i++))
+parameters=`./house_graber_split.sh "${followers[*]}"`
+for ((i=0; i < ${#followers[*]}; i++ )); do
+  line=$((i+1))
+  startPage[$i]=`echo "$parameters" | sed -n "${line}p" | cut -d "\"" -f2 | cut -d " " -f2`
+  endPage[$i]=`echo "$parameters" | sed -n "${line}p" | cut -d "\"" -f2 | cut -d " " -f3`
 done
 
 #set up connect and pipe
