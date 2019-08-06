@@ -20,7 +20,7 @@ beforeExit() {
 
 closeAllInPipe()
 {
-  for (( i = 0; k < ${#infd[*]}; i++ )); do
+  for (( i = 0; i < ${#infd[*]}; i++ )); do
     exec  ${infd[$i]} >& -
   done
 }
@@ -55,10 +55,12 @@ for (( i=0; i < ${#followers[*]}; i++ )); do
     ncat $host $port <&3 >&4 2>/dev/null 
   } &
 
-  exec $fd>$msgoutFile
+  redir="$fd>$msgoutFile"
+  eval exec $redir 
   outfd[$i]=$fd
   ((fd++))
-  exec $fd<$msginFile
+  redir="$fd<$msginFile"
+  eval exec $redir 
   infd[$i]=$fd
   ((fd++))
 
