@@ -10,6 +10,7 @@ totalEntry=`bash sz_second-hand_house_total_entry.sh`
 if (( $? != 0 )); then
 exit 1
 fi
+totalEntry=$(( totalEntry % 20 == 0 ? totalEntry / 20 : totalEntry / 20 + 1 ))
 
 stepLength=0
 stepLength=$(( totalEntry % ${#followers[*]} == 0 ? totalEntry / ${#followers[*]} : totalEntry / ${#followers[*]} + 1 ))
