@@ -79,7 +79,6 @@ fi
 declare -a isover
 while ((1)); do
   overCounter=0
-  isFialed=0
   for (( i = 0; i < ${#infd[*]}; i++ )); do
     isover[$i]=0
   done
@@ -92,15 +91,15 @@ while ((1)); do
     echo $action ${startPage[$i]} ${endPage[$i]} >& ${outfd[$i]}
   done
 
-  while (( isFialed==0 &&  overCounter < ${#infd[*]} )); do
+  while (( overCounter < ${#infd[*]} )); do
     for (( i = 0; i < ${#infd[*]}; i++ )); do
       if (( ${isover[$i]} == 1 )); then
         continue
       fi
       read -u ${infd[$i]} -t 180 
       if (( $? != 0 )); then
-        isFialed=1
-        break
+        ./post_dingding_msg.sh "read ${followers[$i]} time out, retry!"
+        continue
       fi
       if [ "$REPLY" == "EOF" ]; then
         ((overCounter++))
@@ -110,12 +109,6 @@ while ((1)); do
       fi 
     done
   done
-
-  if (( isFialed != 0 )); then
-    ./post_dingding_msg.sh "error when read pip! graber leader exit..."
-    beforeExit
-    exit 1    
-  fi
 
   out=graber_leader-`./send_ts.sh`
   for (( i=0; i < ${#followers[*]}; i++ )); do

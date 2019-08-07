@@ -71,22 +71,15 @@ tmp=`curl $option $head $head1 $head2 $head3 $head4 $head5 $head6 $head7 $method
          $data "tep_name=$tep_name" \
          $data "ddlPageCount=$ddlPageCount" "$url"`
 if [[ "$?" != "0" || -z "$tmp" ]]; then
-exit 1
+  sleep 30
+  init
+  ((i--))
+  continue
 fi
 updateParameters "$tmp"
 tmp=`echo "$tmp" | hxnormalize -x`
 echo  "$tmp" |  hxselect "table.table.ta-c.bor-b-1.table-white" \
   | w3m -dump -cols 2000 -T 'text/html' | sed -n '2, $p'
-if (( i % 100 == 0 )); then
-  sleep 30
-  init
-  continue
-fi
-if (( i % 20 == 0 )); then
-  sleep 10
-  init
-  continue
-fi
 done
 
 echo EOF
