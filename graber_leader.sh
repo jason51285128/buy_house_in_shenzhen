@@ -4,13 +4,15 @@ if (( $# != 2 )); then
 exit 1
 fi
 
+PWD=$(cd "$(dirname "$0")";pwd)
 action=$1
 followers=($2)
 declare -a outfd
 declare -a infd
 declare -a startPage
 declare -a endPage
-fd=3
+lock=3
+fd=4
 
 #function define
 beforeExit() {
@@ -77,6 +79,7 @@ fi
 
 #read from pipe until finish or fail
 declare -a isover
+exec 3>"$PWD/writelock"
 while ((1)); do
   overCounter=0
   for (( i = 0; i < ${#infd[*]}; i++ )); do
@@ -110,11 +113,13 @@ while ((1)); do
     done
   done
 
-  out=graber_leader-`./send_ts.sh`
+  out=graber_leader.out
+  flock $lock
+  cat /dev/null > $out
   for (( i=0; i < ${#followers[*]}; i++ )); do
     cat ${followers[$i]}.out >> $out
-    cat /dev/null > ${followers[$i]}.out
   done
+  flock -u $lock
   ./post_dingding_msg.sh "graber task success!"
 
   sleep 1800
