@@ -1,3 +1,5 @@
 #!/bin/bash
 
-date +%Y-%m-%d-%H-%M-%S
+date=`date +%F`
+time=`date +%R:%S`
+echo $date $time
