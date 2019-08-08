@@ -101,7 +101,9 @@ while ((1)); do
       fi
       read -u ${infd[$i]} -t 180 
       if (( $? != 0 )); then
-        ./post_dingding_msg.sh "read ${followers[$i]} time out, retry!"
+        ts=`./send_ts.sh`
+        postreply=`./post_dingding_msg.sh "$ts graber leader read ${followers[$i]} time out, retry!"`
+        echo "$postreply"
         continue
       fi
       if [ "$REPLY" == "EOF" ]; then
@@ -120,7 +122,9 @@ while ((1)); do
     cat ${followers[$i]}.out >> $out
   done
   flock -u $lock
-  ./post_dingding_msg.sh "graber task success!"
+  ts=`./send_ts.sh`
+  postreply=`./post_dingding_msg.sh "$ts graber leader task success!"`
+  echo  "$postreply"
 
   sleep 1800
 done
