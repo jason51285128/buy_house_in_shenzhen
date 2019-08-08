@@ -77,7 +77,10 @@ if (( !(${#followers[*]} == ${#infd[*]}  && ${#infd[*]} == ${#outfd[*]} && ${#ou
   exit 1 
 fi
 
-#read from pipe until finish or fail
+#signal handle
+trap "closeAllInPipe; exit 0" TERM INT
+
+#read from pipe loop 
 declare -a isover
 exec 3>"$PWD/writelock"
 while ((1)); do
