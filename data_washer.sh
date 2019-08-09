@@ -27,12 +27,18 @@ graberLeaderDataWash()
     if (( $? != 0 )); then
       break
     fi
+    if [ -z "$REPLY" ]; then
+      continue
+    fi
     ((lineindex++))
     if (( lineindex % 2 == 1 )); then
       line=$REPLY
     else
       phoneNumber=`echo "$REPLY" | tr -cd [0-9]` 
-      echo -e "$line $phoneNumber" >& 5
+      if [ -z "$phoneNumber" ]; then
+        phoneNumber="\\N"
+      fi
+      echo "$line $phoneNumber" >& 5
     fi
   done
   exec 4>&-
