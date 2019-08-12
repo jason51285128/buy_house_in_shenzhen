@@ -66,6 +66,9 @@ graberLeaderDataWash()
   exec 4>&-
   exec 5>&-
   rm -f $step2Out  
+
+  afterwash="graber_leader_out.aw"
+  mv $step3Out $afterwash
 }
 
 defaultWash()
