@@ -60,7 +60,7 @@ graberLeaderDataWash()
     fi
     state="在售"
     date=`date +%F`
-    line=`echo $REPLY | awk '{if ( NF < 10 ) {gsub($5,$5"\t\\N");gsub($NF,$NF"\t'"$state"'\t'"$date"'")}' 'else {gsub($NF,$NF"\t'"$state"'\t'"$date"'")} print $0 }'`
+    line=`echo $REPLY | awk '{if ( NF < 10 ) {gsub($5,$5"\t\\\N");gsub($NF,$NF"\t'"$state"'\t'"$date"'")} else {gsub($NF,$NF"\t'"$state"'\t'"$date"'")} print $0 }'`
     echo "$line" >& 5
   done
   exec 4>&-
