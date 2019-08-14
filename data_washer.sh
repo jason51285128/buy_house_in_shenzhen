@@ -67,8 +67,60 @@ graberLeaderDataWash()
   step3Out="$step2Out"
   sed -i 's/\s\+/\t/g' "$step3Out"
 
-  afterwash="graber_leader_out.aw"
-  mv $step3Out $afterwash
+  #step4: Deduplication
+  step4Out=`./uuid.sh`
+  touch $step4Out
+  for line in `awk '/[0-9]{12}/ {print "\""$0"\""}' "$step3Out" `; do
+    houseCode=`echo "$line" | awk '{print $7}'`
+    isExist=`grep "$houseCode" "$step4Out"`
+    if [ -z "$isExist" ]; then
+      echo "$line" | cut -d "\"" -f2 >> $step4Out
+    fi
+  done
+  rm -f "$step3Out"
+
+  #step5: compare-looking for add and delete
+  step5Out="graber_leader.sql"
+  cat /dev/null > $step5Out
+  database="sz_house_list"
+  table="second_hand"
+  host="94.191.116.177"
+  port="9224"
+  pw="buyhouse@sz"
+  echo "USE $database;" >> "$step5Out"
+  for line in `awk '/[0-9]{12}/ {print "\""$0"\""}' "$step4Out" `; do
+    houseCode=`echo "$line" | awk '{print $7}'`
+    isExist=`grep "$houseCode" "$graberLeaderOutLastTime"`
+    if [ -z "$isExist" ]; then
+      xiangmumingchen=`echo "$line" | cut -d "\"" | awk '{print $1}'` 
+      hetongliushuihao=`echo "$line" | cut -d "\"" | awk '{print $2}'`
+      qushu=`echo "$line" | cut -d "\"" | awk '{print $3}'`
+      mainjipingfangmi=`echo "$line" | cut -d "\"" | awk '{print $4}'`
+      yongtu=`echo "$line" | cut -d "\"" | awk '{print $5}'`
+      louceng=`echo "$line" | cut -d "\"" | awk '{print $6}'`
+      fangyuanbianma=`echo "$line" | cut -d "\"" | awk '{print $7}'`
+      dailizhongjie=`echo "$line" | cut -d "\"" | awk '{print $8}'`
+      faburiqi=`echo "$line" | cut -d "\"" | awk '{print $9}'`
+      lianxidianhua=`echo "$line" | cut -d "\"" | awk '{print $10}'`
+      zhuangtai=`echo "$line" | cut -d "\"" | awk '{print $11}'`
+      shouchuriqi=`echo "$line" | cut -d "\"" | awk '{print $12}'`
+      echo  "INSERT INTO $table VALUES (\'$xiangmumingchen\', \'$hetongliushuihao\', \'$qushu\', \'$mainjipingfangmi\', \'$yongtu\', \'$louceng\', \'$fangyuanbianma\', \'$dailizhongjie\', \'$faburiqi\', \'$zhuangtai\', \'$shouchuriqi\');" >> "$step5Out"
+    fi
+  done
+  date=`./send_ts.sh | cut -d " " -f1`
+  for line in `awk '/[0-9]{12}/ {print "\""$0"\""}' "$graberLeaderOutLastTime" `; do
+    houseCode=`echo "$line" | awk '{print $7}'`
+    isExist=`grep "$houseCode" "$step4Out"`
+    if [ -z "$isExist" ]; then
+      fangyuanbianma=`echo "$line" | cut -d "\"" | awk '{print $7}'`
+      zhuangtai='已售'
+      shouchuriqi="$date"
+      echo  "UPDATE $table SET zhuangtai=$zhuangtai, shouchuriqi=$shouchuriqi WHERE fangyuanbianma=$fangyuanbianma;" >> "$step5Out"
+    fi
+  done
+  mysql -h$host -P$port -uroot -p$pw -e "$step5Out"
+  rm -f $step5Out
+  mv "$step4Out" $step5Out
 }
 
 defaultWash()
