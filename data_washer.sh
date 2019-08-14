@@ -49,7 +49,7 @@ graberLeaderDataWash()
   step2Out=$step1Out
   sed -i 's/\s\+/\t/g' "$step1Out"
 
-  #setp3: handle missing field: louceng
+  #setp3: handle missing field: louceng zhuangtai shouchuriqi
   exec 4<$step2Out
   step3Out=`./uuid.sh`
   exec 5>$step3Out
@@ -59,8 +59,8 @@ graberLeaderDataWash()
       break
     fi
     state="在售"
-    date=`date +%F`
-    line=`echo $REPLY | awk '{if ( NF < 10 ) {gsub($5,$5"\t\\\N");gsub($NF,$NF"\t'"$state"'\t'"$date"'")} else {gsub($NF,$NF"\t'"$state"'\t'"$date"'")} print $0 }'`
+    date='\\N'
+    line=`echo "$REPLY" | awk '{if ( NF < 10 ) {$5=$5"\t\\\N";$NF=$NF"\t'"$state"'\t'"$date"'"} else {$NF=$NF"\t'"$state"'\t'"$date"'"} print $0 }'`
     echo "$line" >& 5
   done
   exec 4>&-
