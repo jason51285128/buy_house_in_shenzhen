@@ -45,14 +45,10 @@ graberLeaderDataWash()
   exec 5>&-
   rm -f $step1In
 
-  #step2: conv space to tab
-  step2Out=$step1Out
-  sed -i 's/\s\+/\t/g' "$step1Out"
-
-  #setp3: handle missing field: louceng zhuangtai shouchuriqi
-  exec 4<$step2Out
-  step3Out=`./uuid.sh`
-  exec 5>$step3Out
+   #setp2: handle missing field: louceng zhuangtai shouchuriqi
+  exec 4<$step1Out
+  step2Out=`./uuid.sh`
+  exec 5>$step2Out
   while ((1));do
     read -u 4
     if (( $? != 0 )); then
@@ -60,12 +56,16 @@ graberLeaderDataWash()
     fi
     state="在售"
     date='\\N'
-    line=`echo "$REPLY" | awk '{if ( NF < 10 ) {$5=$5"\t\\\N";$NF=$NF"\t'"$state"'\t'"$date"'"} else {$NF=$NF"\t'"$state"'\t'"$date"'"} print $0 }'`
+    line=`echo "$REPLY" | awk '{if ( NF < 10 ) {$5=$5" \\\N";$NF=$NF" '"$state"' '"$date"'"} else {$NF=$NF" '"$state"' '"$date"'"} print $0 }'`
     echo "$line" >& 5
   done
   exec 4>&-
   exec 5>&-
-  rm -f $step2Out  
+  rm -f $step1Out 
+
+  #step3: conv space to tab
+  step3Out="$step2Out"
+  sed -i 's/\s\+/\t/g' "$step3Out"
 
   afterwash="graber_leader_out.aw"
   mv $step3Out $afterwash
