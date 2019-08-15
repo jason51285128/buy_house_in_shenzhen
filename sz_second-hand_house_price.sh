@@ -63,10 +63,17 @@ tmp=`curl $option $head $head1 $method   \
          $data "checkCode=$safecode" \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
 if [ -z "$tmp" ]; then
-exit 1
+  echo "1 0"
+  rm -f $cookie $safecodeFile
+  exit
 fi
 value=`echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
   | w3m -dump -cols 2000 -T 'text/html' `
-echo "$value" | awk '/意向价格（万元）/ {print $3}' | cut -d "：" -f2
+if [[ "$value" == "查无资料或者该房源已经失效" ]]; then
+  echo "0 0"
+else
+  price=`echo "$value" | awk '/意向价格（万元）/ {print $3}' | cut -d "：" -f2`
+  echo "0 $price"
+fi
 
 rm -f $cookie $safecodeFile
