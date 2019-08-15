@@ -1,19 +1,18 @@
 #!/bin/bash
 
+if (( $# < 1 )); then
+exit 1
+fi
+
 url=http://zjj.sz.gov.cn/ris/szfdc/MLS/Index.aspx
 __VIEWSTATE=
 __VIEWSTATEGENERATOR=
 __VIEWSTATEENCRYPTED=
 __EVENTVALIDATION=
-txtCode=
+txtCode="$1"
 checkCode=
 BtCheck="核对"
-
-if (( $# < 1 )); then
-exit 1
-fi
-grabOut="$1"
-scriptName="sz_second-hand_house_verify"
+scriptName="sz_second-hand_house_price"
 cookie=${scriptName}_`date +%N`
 cookie=`echo "$cookie" | md5sum | cut -d " " -f1`
 safecodeFile="safecode.jpg"
@@ -34,6 +33,7 @@ __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
   fi
   safecode=`./baidu_ocr.sh -f $safecodeFile -l 0 | sed '$p' -n |  cut -d "\"" -f2`
   if [[ "$?" != "0" || -z "$safecode" ]]; then
+    $?=1
     return
   fi 
 }
@@ -49,11 +49,7 @@ if [ "$?" != "0" ]; then
   exit 1
 fi 
 
-tmpout=${scriptName}_`date +%N`
-tmpout=`echo "$tmpout" | md5sum | cut -d " " -f1`
-echo "[" > $tmpout
 
-for txtCode in `awk '/[0-9]{12}/ {if (NF < 9) {print $6}  else {print $7}}' "$grabOut"`; do
 data="--data-urlencode"
 method="-X POST"
 head="--header Content-Type:application/x-www-form-urlencoded"
@@ -67,22 +63,10 @@ tmp=`curl $option $head $head1 $method   \
          $data "checkCode=$safecode" \
          $data "BtCheck=$BtCheck" "$url" | hxnormalize -x`
 if [ -z "$tmp" ]; then
-rm -f $tmpout
 exit 1
 fi
 value=`echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
   | w3m -dump -cols 2000 -T 'text/html' `
-value=`echo "$value" | base64 | sed ":a;N;s/\n/\*/g;ta"`
-echo "{\"key\": \"$txtCode\", \"value\": \"$value\"}," >> $tmpout  
-updateParameters "$tmp"
-if [ "$?" != "0" ]; then
-  rm -f $tmpout
-  exit 1
-fi
-done
+echo "$value" | awk '/意向价格（万元）/ {print $3}' | cut -d "：" -f2
 
-rm -f "$cookie"
-echo "{\"key\": \"\", \"value\": \"\"}" >> $tmpout   
-echo "]" >> $tmpout
-cat $tmpout | jq .
-rm -f $tmpout
+rm -f $cookie $safecodeFile
