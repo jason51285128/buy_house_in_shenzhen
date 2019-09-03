@@ -20,4 +20,4 @@ while ((1)); do
 done
 
 echo `./send_ts.sh` " start leader $action \"$followers\" $out"
-nohup ./graber_leader.sh "\"$action\"" "\"$followers\"" $out > graber_leader.log 2>&1 &
+nohup ./graber_leader.sh "$action" "$followers" "$out" > graber_leader.log 2>&1 &

@@ -8,6 +8,9 @@ PWD=$(cd "$(dirname "$0")";pwd)
 action=$1
 followers=($2)
 out=$3
+echo $action
+echo $followers
+echo $out
 declare -a outfd
 declare -a infd
 declare -a startPage
