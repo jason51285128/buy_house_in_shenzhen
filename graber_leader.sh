@@ -9,7 +9,7 @@ action=$1
 followers=($2)
 out=$3
 echo $action
-echo $followers
+echo ${followers[*]}
 echo $out
 declare -a outfd
 declare -a infd
