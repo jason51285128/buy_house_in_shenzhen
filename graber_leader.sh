@@ -1,12 +1,13 @@
 #!/bin/bash
 
-if (( $# != 2 )); then
+if (( $# != 3 )); then
 exit 1
 fi
 
 PWD=$(cd "$(dirname "$0")";pwd)
 action=$1
 followers=($2)
+out=$3
 declare -a outfd
 declare -a infd
 declare -a startPage
@@ -118,7 +119,6 @@ while ((1)); do
     done
   done
 
-  out=graber_leader.out
   flock $lock
   cat /dev/null > $out
   for (( i=0; i < ${#followers[*]}; i++ )); do
