@@ -16,14 +16,14 @@ fd=4
 
 #function define
 beforeExit() {
-  closeAllInPipe
+  closeAllOutPipe
   emptyAllSubOutFile
 } 
 
-closeAllInPipe()
+closeAllOutPipe()
 {
-  for (( i = 0; i < ${#infd[*]}; i++ )); do
-    redir="${infd[$i]}>&-"
+  for (( i = 0; i < ${#outfd[*]}; i++ )); do
+    redir="${outfd[$i]}>&-"
     eval exec $redir 
   done
 }
@@ -78,7 +78,7 @@ if (( !(${#followers[*]} == ${#infd[*]}  && ${#infd[*]} == ${#outfd[*]} && ${#ou
 fi
 
 #signal handle
-trap "closeAllInPipe; exit 0" TERM INT
+trap "closeAllOutPipe; exit 0" TERM INT
 
 #read from pipe loop 
 declare -a isover
