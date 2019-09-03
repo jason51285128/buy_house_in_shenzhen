@@ -14,7 +14,7 @@ successStatus=1
 if (( $# < 1 )); then
 exit 1
 fi
-grabOut="$1"
+houseName="$1"
 
 getLocation()
 {
@@ -26,26 +26,10 @@ getLocation()
     fi
 }
 
-scriptName="query_location"
-tmpout=${scriptName}_`date +%N`
-tmpout=`echo "$tmpout" | md5sum | cut -d " " -f1`
-echo "[" > $tmpout
-
-for name_dot_code in `awk '/[0-9]{12}/ {if (NF < 9) {print $1"."$6}  else {print $1"."$7}}' "$grabOut"`; do
-    houseName=`echo -n "$name_dot_code" | cut -d "."  -f1`
-    houseCode=`echo -n "$name_dot_code" | cut -d "." -f2`
-    getLocation "$houseName" 
-    if [ -z "$location" ]; then
-      rm -f $tmpout
-      exit 1
-    fi
-    location=`echo "$location" | sed "s/^{/{\"key\":\"$houseCode\",/"`
-    location=`echo "$location" | sed "s/$/,/"`
-    echo $location >> $tmpout
-    sleep 0.1
-done
-
-echo "{\"key\": \"\", \"value\": \"\"}" >> $tmpout   
-echo "]" >> $tmpout
-cat $tmpout | jq .
-rm -f $tmpout
+getLocation "$houseName" 
+if [ -z "$location" ]; then
+  echo "1 0"
+  exit 1
+fi
+coordinate=`echo "$location" | jq .pois[0].location | cut -d "\"" -f2`
+echo "0 $coordinate"

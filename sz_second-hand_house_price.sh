@@ -70,7 +70,7 @@ fi
 value=`echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
   | w3m -dump -cols 2000 -T 'text/html' `
 if [[ "$value" == "查无资料或者该房源已经失效" ]]; then
-  echo "0 0"
+  echo "0 invalid"
 else
   price=`echo "$value" | awk '/意向价格（万元）/ {print $3}' | cut -d "：" -f2`
   echo "0 $price"
