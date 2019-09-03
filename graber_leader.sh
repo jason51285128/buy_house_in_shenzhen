@@ -95,7 +95,7 @@ while ((1)); do
   echo `./send_ts.sh` " start dispatch task..."
   for (( i=0; i < ${#followers[*]}; i++ )); do
     delay=`date +%s`
-    (( delay % 10))
+    delay=$(( delay % 10))
     sleep $delay
     echo `./send_ts.sh` ${followers[$i]} ${startPage[$i]} ${endPage[$i]}
     echo $action ${startPage[$i]} ${endPage[$i]} >& ${outfd[$i]}
