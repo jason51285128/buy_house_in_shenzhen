@@ -92,9 +92,12 @@ while ((1)); do
   emptyAllSubOutFile
 
   #start grab
-  echo "start grab task..."
+  echo `./send_ts.sh` " start dispatch task..."
   for (( i=0; i < ${#followers[*]}; i++ )); do
-    echo ${followers[$i]} ${startPage[$i]} ${endPage[$i]}
+    delay=`date +%s`
+    (( delay % 10))
+    sleep $delay
+    echo `./send_ts.sh` ${followers[$i]} ${startPage[$i]} ${endPage[$i]}
     echo $action ${startPage[$i]} ${endPage[$i]} >& ${outfd[$i]}
   done
 
@@ -126,8 +129,8 @@ while ((1)); do
   done
   flock -u $lock
   ts=`./send_ts.sh`
-  postreply=`./post_dingding_msg.sh "$ts graber leader task success!"`
-  echo  "$postreply"
+  postreply=`./post_dingding_msg.sh "$ts graber task success!"`
+  echo  "$ts graber task success!"
 
   sleep 1800
 done
