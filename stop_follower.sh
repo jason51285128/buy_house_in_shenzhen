@@ -16,6 +16,6 @@ while ((1)); do
   account=`echo "$REPLY" | cut -d " " -f3`
   pw=`echo "$REPLY" | cut -d " " -f4`
   echo `./send_ts.sh` "stop follower in $host $port $account $pw"    
-  sshpass -p "$pw" ssh -o StrictHostKeyChecking=no $account "killall -w graber_follower.sh" 
+  sshpass -p "$pw" ssh -o StrictHostKeyChecking=no $account "killall -w graber_follower.sh; killall -w ncat" 
   echo 
 done
