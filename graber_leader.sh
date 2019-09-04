@@ -1,13 +1,15 @@
 #!/bin/bash
 
-if (( $# != 3 )); then
+if (( $# != 4 )); then
 exit 1
 fi
 
 PWD=$(cd "$(dirname "$0")";pwd)
-action=$1
-followers=($2)
-out=$3
+pattern=$1
+action=$2
+followers=($3)
+out=$4
+echo $pattern
 echo $action
 echo ${followers[*]}
 echo $out
@@ -88,6 +90,12 @@ trap "closeAllOutPipe; exit 0" TERM INT
 declare -a isover
 exec 3>"$PWD/writelock"
 while ((1)); do
+  shallStart=`date +%R | grep "$pattern"`
+  if [ -z "$shallStart" ]; then
+    sleep 600
+    continue
+  fi
+
   overCounter=0
   for (( i = 0; i < ${#infd[*]}; i++ )); do
     isover[$i]=0
@@ -95,7 +103,9 @@ while ((1)); do
   emptyAllSubOutFile
 
   #start grab
-  echo `./send_ts.sh` " start dispatch task..."
+  msg="`./send_ts.sh` start dispatch task..."
+  echo "$msg"
+  ./post_dingding_msg.sh "$msg" 
   for (( i=0; i < ${#followers[*]}; i++ )); do
     delay=`date +%s`
     delay=$(( delay % 10))
@@ -112,8 +122,7 @@ while ((1)); do
       read -u ${infd[$i]} -t 180 
       if (( $? != 0 )); then
         ts=`./send_ts.sh`
-        postreply=`./post_dingding_msg.sh "$ts graber leader read ${followers[$i]} time out, retry!"`
-        echo "$postreply"
+        ./post_dingding_msg.sh "$ts graber leader read ${followers[$i]} time out, retry!"
         continue
       fi
       if [ "$REPLY" == "EOF" ]; then
@@ -132,8 +141,6 @@ while ((1)); do
   done
   flock -u $lock
   ts=`./send_ts.sh`
-  postreply=`./post_dingding_msg.sh "$ts graber task success!"`
+  ./post_dingding_msg.sh "$ts graber task success!"
   echo  "$ts graber task success!"
-
-  sleep 1800
 done

@@ -3,6 +3,7 @@
 PWD="$(cd "$(dirname "$0")"; pwd)"
 
 followerList="follower.list"
+pattern="00:0"
 action="./szshhg.sh"
 followers=
 out="sz_second-hand_house_list.origin"
@@ -20,4 +21,4 @@ while ((1)); do
 done
 
 echo `./send_ts.sh` " start leader $action \"$followers\" $out"
-nohup ./graber_leader.sh "$action" "$followers" "$out" > graber_leader.log 2>&1 &
+nohup ./graber_leader.sh "$pattern" "$action" "$followers" "$out" > graber_leader.log 2>&1 &
