@@ -43,6 +43,7 @@ sold="已售"
 onsell="在售"
 date=`date +%F`
 counter=0
+pattern='^[0-9]+.?[0-9]+'
 while ((1)); do
   read -u 4
   if (( $? != 0 )); then
@@ -87,7 +88,11 @@ while ((1)); do
         ((counter++))
         continue
       fi
-      jiagewan=${price[1]}
+      isMatch=`echo "${price[1]}" | grep -E "$pattern"`
+      if [ -n "$isMatch" ]; then
+        jiagewan=${price[1]}
+      fi
+      break
     done
     counter=0
     while (( counter < 3 )); do
@@ -96,7 +101,11 @@ while ((1)); do
         ((counter++))
         continue
       fi
-      weizhi=${location[1]}
+      isMatch=`echo "${price[1]}" | grep -E "$pattern"`
+      if [ -n "$isMatch" ]; then
+        weizhi=${location[1]}
+      fi
+      break
     done
     zhuangtai="$onsell"
     shouchuriqi="\\N"
