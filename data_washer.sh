@@ -63,6 +63,7 @@ szSecondHandHouseListDataWash()
     msg="`./send_ts.sh` sync second_hand house list database failed!"
   else
     msg="`./send_ts.sh` sync second_hand house list database success!"
+    rm -f "$step2Out"
   fi
   echo "$msg"
   ./post_dingding_msg.sh "$msg"

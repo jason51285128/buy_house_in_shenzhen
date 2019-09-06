@@ -13,9 +13,9 @@ if (( $# != 1 )); then
 fi 
 
 newOriginData="$1"
-tmp=`./uuid.sh`
+tmp=`./uuid.sh`.tmp
 awk '{print $2}' "$newOriginData" > "$tmp"
-newData=`./uuid.sh`
+newData=`./uuid.sh`.new
 sort "$tmp" > "$newData"
 
 out=`./uuid.sh`.sql
@@ -33,10 +33,10 @@ if (( $? != 0 )); then
   exit 1
 fi
 sed -i '1d' "$tmp"
-oldData=`./uuid.sh`
+oldData=`./uuid.sh`.old
 sort "$tmp" > "$oldData"
 
-diffData=`./uuid.sh`
+diffData=`./uuid.sh`.diff
 diff "$oldData" "$newData" > "$diffData"
 exec 4<"$diffData"
 sold="已售"
@@ -55,10 +55,10 @@ while ((1)); do
     echo "$sql" >& 3 
     ;;
   ">")
-    entry=(`awk "/${line[0]}/" $newOriginData`)
+    entry=(`awk '{ if($2=="'"${line[1]}"'"){print $0} }' $newOriginData`)
     if (( ${#entry[*]} < 9 )); then
-      echo "parse diff failed!"
-      exit
+      echo "parse diff failed in line: ${line[*]}"
+      exit 1
     fi
     xiangmumingchen=${entry[0]}
     hetongliushuihao=${entry[1]}
@@ -104,15 +104,12 @@ while ((1)); do
         (xiangmumingchen, hetongliushuihao, qushu, mianjipingfangmi, yongtu, \
         louceng, fangyuanbianma, dailizhongjie, faburiqi, lianxidianhua, \
         jiagewan, weizhi, zhuangtai, shouchuriqi) \
-        values
+        values \
         (\"$xiangmumingchen\", \"$hetongliushuihao\", \"$qushu\", $mianjipingfangmi, \"$yongtu\", \
-        $louceng, \"$fangyuanbianma\", \"$dailizhongjie\", \"$faburiqi\", $lianxidianhua, \
-        $jiagewan, $weizhi, \"$zhuangtai\", \"$shouchuriqi\");"
+        $louceng, \"$fangyuanbianma\", \"$dailizhongjie\", \"$faburiqi\", \"$lianxidianhua\", \
+        $jiagewan, $weizhi, \"$zhuangtai\", $shouchuriqi);"
     echo "$sql" >& 3 
-  ;;
-  *)
-    echo "$REPLY" >&3
-  ;;
+    ;;
   esac
 done
 
