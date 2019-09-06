@@ -72,7 +72,7 @@ value=`echo  "$tmp" | hxselect "table.table.verify-table.table-white.mb20" \
 if [[ "$value" == "查无资料或者该房源已经失效" ]]; then
   echo "0 invalid"
 else
-  price=`echo "$value" | awk '/意向价格（万元）/ {print $3}' | cut -d "：" -f2`
+  price=`echo "$value" | awk '/意向价格（万元）/ {print $3}' |  tr -cd "[0-9.]"`
   echo "0 $price"
 fi
 

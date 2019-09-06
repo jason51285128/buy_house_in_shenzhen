@@ -103,7 +103,7 @@ while ((1)); do
       fi
       isMatch=`echo "${price[1]}" | grep -E "$pattern"`
       if [ -n "$isMatch" ]; then
-        weizhi=${location[1]}
+        weizhi="\"${location[1]}\""
       fi
       break
     done
