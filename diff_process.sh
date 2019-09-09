@@ -14,12 +14,13 @@ fi
 
 newOriginData="$1"
 tmp=`./uuid.sh`.tmp
-awk '{print $2}' "$newOriginData" > "$tmp"
+awk '{print $2 "\t" "在售"}' "$newOriginData" > "$tmp"
 newData=`./uuid.sh`.new
 sort "$tmp" > "$newData"
 
 out=`./uuid.sh`.sql
 exec 3>"$out"
+echo "use sz_house_list;" >& 3
 
 mysqlConf=(`cat mysql.conf`)
 if (( ${#mysqlConf[*]} != 4 )); then
@@ -27,7 +28,7 @@ if (( ${#mysqlConf[*]} != 4 )); then
   exit 1
 fi
 mysql -h${mysqlConf[0]} -u${mysqlConf[1]} -P${mysqlConf[2]}  -p${mysqlConf[3]} \
-  -e "use sz_house_list; select hetongliushuihao from second_hand;" > "$tmp"
+  -e 'use sz_house_list; select hetongliushuihao,zhuangtai from second_hand;' > "$tmp"
 if (( $? != 0 )); then
   echo "access mysql failed!"
   exit 1
@@ -44,6 +45,7 @@ onsell="在售"
 date=`date +%F`
 counter=0
 pattern='^[0-9]+.?[0-9]+'
+null="\\N"
 while ((1)); do
   read -u 4
   if (( $? != 0 )); then
@@ -52,10 +54,21 @@ while ((1)); do
   line=($REPLY)
   case ${line[0]} in
   "<")
+    oldentry=(`awk '{ if($1=="'"${line[1]}"'"){print $0} }' $oldData`)
+    if [[ "${oldentry[1]}" == "$sold" ]]; then
+	    continue
+    fi
     sql="update second_hand set zhuangtai=\"$sold\", shouchuriqi=\"$date\" where hetongliushuihao=\"${line[1]}\";"
     echo "$sql" >& 3 
     ;;
   ">")
+    oldentry=(`awk '{ if($1=="'"${line[1]}"'"){print $0} }' $oldData`)
+    if (( ${#oldentry[*]} != 0 )); then
+	    sql="update second_hand set zhuangtai=\"$onsell\", shouchuriqi=$null where hetongliushuihao=\"${line[1]}\";"
+            echo "$sql" >& 3 
+	    continue
+    fi
+
     entry=(`awk '{ if($2=="'"${line[1]}"'"){print $0} }' $newOriginData`)
     if (( ${#entry[*]} < 9 )); then
       echo "parse diff failed in line: ${line[*]}"
@@ -64,10 +77,10 @@ while ((1)); do
     xiangmumingchen=${entry[0]}
     hetongliushuihao=${entry[1]}
     qushu=${entry[2]}
-    mianjipingfangmi=${entry[3]}
+    mianjipingfangmi=`echo "${entry[3]}" |  tr -cd [0-9.]`
     yongtu=${entry[4]}
     if (( ${#entry[*]} >= 10 )); then
-      louceng=${entry[5]}
+      louceng=`echo "${entry[5]}" | tr -cd [0-9]`
       fangyuanbianma=${entry[6]}
       dailizhongjie=${entry[7]}
       faburiqi=${entry[8]}
