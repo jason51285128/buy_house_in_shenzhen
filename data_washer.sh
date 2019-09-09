@@ -97,6 +97,7 @@ while ((1)); do
     tmp=`stat -c %Y ${srcData[$i]}`
     flock -u $lock
     if [[ "${lastModify[$i]}" != "$tmp" ]]; then
+      lastModify[$i]="$tmp"
       case ${srcData[$i]} in
         "$szSecondHandHouseListOrigin")
           szSecondHandHouseListDataWash
@@ -105,7 +106,6 @@ while ((1)); do
           defaultWash
         ;;
       esac
-      lastModify[$i]="$tmp"
     fi
   done
 done
