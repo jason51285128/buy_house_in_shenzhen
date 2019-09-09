@@ -60,13 +60,16 @@ szSecondHandHouseListDataWash()
   #step3 process diff
   ./diff_process.sh "$step2Out"  
   if (( $? != 0 )); then
-    msg="`./send_ts.sh` sync second_hand house list database failed!"
+    msg="`./send_ts.sh` sync second_hand house list database failed! exit 1"
+    echo "$msg"
+    ./post_dingding_msg.sh "$msg"
+    exit 1
   else
     msg="`./send_ts.sh` sync second_hand house list database success!"
+    echo "$msg"
+    ./post_dingding_msg.sh "$msg"
     rm -f "$step2Out"
   fi
-  echo "$msg"
-  ./post_dingding_msg.sh "$msg"
 }
 
 defaultWash()
@@ -93,7 +96,7 @@ while ((1)); do
     flock $lock
     tmp=`stat -c %Y ${srcData[$i]}`
     flock -u $lock
-    if [ "${lastModify[$i]}" != "$tmp" ]; then
+    if [[ "${lastModify[$i]}" != "$tmp" ]]; then
       case ${srcData[$i]} in
         "$szSecondHandHouseListOrigin")
           szSecondHandHouseListDataWash

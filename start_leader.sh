@@ -3,7 +3,7 @@
 PWD="$(cd "$(dirname "$0")"; pwd)"
 
 followerList="follower.list"
-pattern="00:0"
+pattern="18:0"
 action="./szshhg.sh"
 followers=
 out="sz_second-hand_house_list.origin"
