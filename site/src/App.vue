@@ -1,22 +1,22 @@
 <template>
   <div id="app">
-    <el-form ref="form" :model="form" :inline="true" label-width="80px">
+    <el-form ref="form" :model="form" :inline="true">
       <el-form-item label="项目名称">
-        <el-input v-model="form.name"></el-input>
+        <el-input v-model="form.xiangmumingchen"></el-input>
       </el-form-item>
       <el-form-item label="区属">
-        <el-select v-model="form.area" placeholder="全部">
+        <el-select v-model="form.qushu" placeholder="全部">
           <el-option label="南山" value="南山"></el-option>
           <el-option label="福田" value="福田"></el-option>
           <el-option label="罗湖" value="罗湖"></el-option>
           <el-option label="宝安" value="宝安"></el-option>
           <el-option label="盐田" value="盐田"></el-option>
           <el-option label="龙岗" value="龙岗"></el-option>
-          <el-option label="全部" value=""></el-option>
+          <el-option label="全部" value></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="类型">
-        <el-select v-model="form.type" placeholder="全部">
+        <el-select v-model="form.leixing" placeholder="全部">
           <el-option label="产业研发用房" value="研发"></el-option>
           <el-option label="仓储" value="仓储"></el-option>
           <el-option label="住宅" value="住宅"></el-option>
@@ -34,22 +34,26 @@
           <el-option label="食堂" value="食堂"></el-option>
           <el-option label="酒店" value="酒店"></el-option>
           <el-option label="其他" value="其他"></el-option>
-          <el-option label="全部" value=""></el-option>
+          <el-option label="全部" value></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="价格（万）">
+        <el-input v-model="form.jiagel" placeholder="最低"></el-input>
+        <el-input v-model="form.jiageh" placeholder="最高"></el-input>
+      </el-form-item>
       <el-form-item label="房源编码">
-        <el-input v-model="form.house_code"></el-input>
+        <el-input v-model="form.fangyuanbianma"></el-input>
       </el-form-item>
       <el-form-item label="发布日期">
-        <el-select v-model="form.release_date" placeholder="不限">
-          <el-option label="一个月内" value="0"></el-option>
-          <el-option label="三个月内" value="1"></el-option>
-          <el-option label="半年内" value="2"></el-option>
-          <el-option label="不限" value=""></el-option>
+        <el-select v-model="form.faburiqi" placeholder="不限">
+          <el-option label="一个月内" value="30"></el-option>
+          <el-option label="三个月内" value="90"></el-option>
+          <el-option label="半年内" value="180"></el-option>
+          <el-option label="不限" value></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="状态">
-        <el-select v-model="form.state" placeholder="待售">
+        <el-select v-model="form.zhuangtai" placeholder="待售">
           <el-option label="待售" value="待售"></el-option>
           <el-option label="已售" value="已售"></el-option>
         </el-select>
@@ -58,7 +62,7 @@
         <el-button type="primary" @click="onSubmit">查询</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="table_data" height="250" style="width: 100%">
+    <el-table :data="tableData" height="250" style="width: 100%">
       <el-table-column prop="xiangmumingchen" label="项目名称" width="180"></el-table-column>
       <el-table-column prop="hetongliushuihao" label="合同流水号" width="180"></el-table-column>
       <el-table-column prop="qushu" label="区属"></el-table-column>
@@ -78,38 +82,62 @@
       @current-change="handleCurrentChange"
       :current-page="currentPage"
       :page-sizes="[100, 200, 300, 400]"
-      :page-size="100"
+      :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
-      :total="400"
+      :total="0"
     ></el-pagination>
   </div>
 </template>
 
 <script>
+const axios = require("axios");
+
 export default {
   data() {
     return {
       form: {
-        name: "",
-        area: "",
-        type: "",
-        house_code: "",
-        release_date: "",
-        state: "待售"
+        xiangmumingchen: "",
+        qushu: "",
+        leixing: "",
+        jiagel: "",
+        jiageh: "",
+        fangyuanbianma: "",
+        faburiqi: "",
+        zhuangtai: "待售"
       },
-      table_data: [],
-      currentPage: 2
+      tableData: [],
+      currentPage: 1,
+      pageSize: 100,
+      total: 0
     };
   },
   methods: {
     onSubmit() {
-      console.log("submit!");
+      window.console.log("onsubmit called!");
+      axios({
+        method: "get",
+        baseURL: "http://192.168.126.221:8080",
+        url: "/",
+        params: this.form
+      }).then(function(response) {
+        window.console.log("http responsed");
+        this.originData = response
+        this.total = response.tableData.length
+        this.currentPage = 1
+      });
     },
     handleSizeChange(val) {
-      console.log(`每页 ${val} 条`);
+      this.currentPage = 1
+      this.pageSize = val
     },
     handleCurrentChange(val) {
-      console.log(`当前页: ${val}`);
+      this.currentPage = val
+      var start = (this.currentPage - 1) * this.pageSize
+      var end = start + this.pageSize - 1
+      if (end > (this.originData.length() - 1)) {
+        end = this.originData.length() - 1
+      }
+      this.tableData = this.originData.slice(start, end)
     }
   }
 };
