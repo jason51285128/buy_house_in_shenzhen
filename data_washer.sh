@@ -1,10 +1,15 @@
 #!/bin/bash
-if (( $# != 1 )); then
+if (( $# != 2 )); then
 exit 1
 fi
 
 PWD=$(cd "$(dirname "$0")";pwd)
 srcData=($1)
+lastModify=($2)
+if (( ${#srcData[*]} != ${#lastModify[*]} )); then
+  echo "parameter length not equal!"
+  exit 1
+fi
 lock=3
 exec 3>"$PWD/writelock"
 
@@ -78,7 +83,6 @@ defaultWash()
 }
 #fuction definition end
 
-declare -a lastModify
 tsn=
 tsl=`date +%s`
 sleepInterval=10
