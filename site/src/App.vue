@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <el-form ref="form" :model="form" :inline="true">
+    <el-form :model="form" label-position="left" size="mini" inline="true">
       <el-form-item label="项目名称">
         <el-input v-model="form.xiangmumingchen"></el-input>
       </el-form-item>
@@ -39,6 +39,9 @@
       </el-form-item>
       <el-form-item label="价格（万）">
         <el-input v-model="form.jiagel" placeholder="最低"></el-input>
+      </el-form-item>
+      <el-form-item label="-"></el-form-item>
+      <el-form-item>
         <el-input v-model="form.jiageh" placeholder="最高"></el-input>
       </el-form-item>
       <el-form-item label="房源编码">
@@ -54,37 +57,37 @@
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="form.zhuangtai" placeholder="待售">
-          <el-option label="待售" value="待售"></el-option>
+          <el-option label="在售" value="在售"></el-option>
           <el-option label="已售" value="已售"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onSubmit" v-loading.fullscreen.lock="loading">查询</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="tableData" height="250" style="width: 100%">
-      <el-table-column prop="xiangmumingchen" label="项目名称" width="180"></el-table-column>
-      <el-table-column prop="hetongliushuihao" label="合同流水号" width="180"></el-table-column>
+    <el-table :data="tableData" style="width: 100%">
+      <el-table-column prop="xiangmumingchen" label="项目名称"></el-table-column>
+      <el-table-column prop="hetongliushuihao" label="合同流水号"></el-table-column>
       <el-table-column prop="qushu" label="区属"></el-table-column>
-      <el-table-column prop="mianji" label="面积(㎡)" width="180"></el-table-column>
-      <el-table-column prop="yongtu" label="用途" width="180"></el-table-column>
+      <el-table-column prop="mianjipingfangmi" label="面积(㎡)"></el-table-column>
+      <el-table-column prop="yongtu" label="用途"></el-table-column>
       <el-table-column prop="louceng" label="楼层"></el-table-column>
-      <el-table-column prop="fangyuanbianma" label="房源编码" width="180"></el-table-column>
-      <el-table-column prop="jiage" label="价格" width="180"></el-table-column>
-      <el-table-column prop="dailizhongjie" label="代理中介" width="180"></el-table-column>
+      <el-table-column prop="fangyuanbianma" label="房源编码"></el-table-column>
+      <el-table-column prop="jiagewan" label="价格"></el-table-column>
+      <el-table-column prop="dailizhongjie" label="代理中介"></el-table-column>
       <el-table-column prop="faburiqi" label="发布日期"></el-table-column>
       <el-table-column prop="lianxidianhua" label="联系电话"></el-table-column>
-      <el-table-column prop="zhuangtai" label="状态" width="180"></el-table-column>
-      <el-table-column prop="shouchuriqi" label="售出日期" width="180"></el-table-column>
+      <el-table-column prop="zhuangtai" label="状态"></el-table-column>
+      <el-table-column prop="shouchuriqi" label="售出日期"></el-table-column>
     </el-table>
     <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="currentPage"
-      :page-sizes="[100, 200, 300, 400]"
+      :page-sizes="pageSizes"
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
-      :total="0"
+      :total="total"
     ></el-pagination>
   </div>
 </template>
@@ -93,7 +96,7 @@
 const axios = require("axios");
 
 export default {
-  data() {
+  data: function() {
     return {
       form: {
         xiangmumingchen: "",
@@ -103,41 +106,51 @@ export default {
         jiageh: "",
         fangyuanbianma: "",
         faburiqi: "",
-        zhuangtai: "待售"
+        zhuangtai: "在售"
       },
+      loading: false,
+      originData: [],
       tableData: [],
       currentPage: 1,
-      pageSize: 100,
-      total: 0
+      pageSize: 20,
+      pageSizes: [20, 50, 100, 200],
+      total: 0,
+      dataUrl: "http://192.168.126.221:8080"
     };
   },
   methods: {
     onSubmit() {
-      window.console.log("onsubmit called!");
-      axios({
-        method: "get",
-        baseURL: "http://192.168.126.221:8080",
-        url: "/",
-        params: this.form
-      }).then(function(response) {
-        window.console.log("http responsed");
-        this.originData = response
-        this.total = response.tableData.length
-        this.currentPage = 1
-      });
+      this.loading = true;
+      axios
+        .get(this.dataUrl, { params: this.form })
+        .then(res => {
+          this.originData = res.data.tableData;
+          this.total = this.originData.length;
+          this.currentPage = 1;
+          this.tableData = this.originData.slice(
+            0,
+            this.currentPage * this.pageSize
+          );
+          this.loading = false;
+        })
+        .catch(err => {
+          console.error(err);
+        });
     },
     handleSizeChange(val) {
-      this.currentPage = 1
-      this.pageSize = val
+      this.currentPage = 1;
+      this.pageSize = val;
+      this.tableData = this.originData.slice(
+        0,
+        this.currentPage * this.pageSize
+      );
     },
     handleCurrentChange(val) {
-      this.currentPage = val
-      var start = (this.currentPage - 1) * this.pageSize
-      var end = start + this.pageSize - 1
-      if (end > (this.originData.length() - 1)) {
-        end = this.originData.length() - 1
-      }
-      this.tableData = this.originData.slice(start, end)
+      this.currentPage = val;
+      this.tableData = this.originData.slice(
+        (this.currentPage - 1) * this.pageSize,
+        this.currentPage * this.pageSizes
+      );
     }
   }
 };
