@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <el-form :model="form" label-position="left" size="mini" inline="true">
+    <el-form :model="form" label-position="left" size="mini" :inline="true">
       <el-form-item label="项目名称">
         <el-input v-model="form.xiangmumingchen"></el-input>
       </el-form-item>
@@ -61,6 +61,14 @@
           <el-option label="已售" value="已售"></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="排序">
+        <el-select v-model="form.orderby" placeholder="按价格">
+          <el-option label="按价格从高到低" value="jiagewan desc"></el-option>
+          <el-option label="按价格从低到高" value="jiagewan"></el-option>
+          <el-option label="按发布日期由近到远" value="faburiqi desc"></el-option>
+          <el-option label="按发布日期由远到近" value="faburiqi"></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSubmit" v-loading.fullscreen.lock="loading">查询</el-button>
       </el-form-item>
@@ -106,7 +114,8 @@ export default {
         jiageh: "",
         fangyuanbianma: "",
         faburiqi: "",
-        zhuangtai: "在售"
+        zhuangtai: "在售",
+        orderby: "jiagewan desc"
       },
       loading: false,
       originData: [],
@@ -149,7 +158,7 @@ export default {
       this.currentPage = val;
       this.tableData = this.originData.slice(
         (this.currentPage - 1) * this.pageSize,
-        this.currentPage * this.pageSizes
+        this.currentPage * this.pageSize
       );
     }
   }
