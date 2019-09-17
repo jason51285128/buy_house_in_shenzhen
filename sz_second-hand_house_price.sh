@@ -33,7 +33,7 @@ __EVENTVALIDATION=`echo "$tmp" | hxselect "#__EVENTVALIDATION" \
   fi
   safecode=`./baidu_ocr.sh -f $safecodeFile -l 0 | sed '$p' -n |  cut -d "\"" -f2`
   if [[ "$?" != "0" || -z "$safecode" ]]; then
-    $?=1
+    ?=1
     return
   fi 
 }
