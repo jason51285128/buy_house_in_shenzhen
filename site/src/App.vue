@@ -81,7 +81,7 @@
       <el-table-column prop="yongtu" label="用途"></el-table-column>
       <el-table-column prop="louceng" label="楼层"></el-table-column>
       <el-table-column prop="fangyuanbianma" label="房源编码"></el-table-column>
-      <el-table-column prop="jiagewan" label="价格"></el-table-column>
+      <el-table-column prop="jiagewan" label="价格（万）"></el-table-column>
       <el-table-column prop="dailizhongjie" label="代理中介"></el-table-column>
       <el-table-column prop="faburiqi" label="发布日期"></el-table-column>
       <el-table-column prop="lianxidianhua" label="联系电话"></el-table-column>
@@ -124,7 +124,7 @@ export default {
       pageSize: 20,
       pageSizes: [20, 50, 100, 200],
       total: 0,
-      dataUrl: "http://192.168.126.221:8080"
+      dataUrl: "http://localhost:15687"
     };
   },
   methods: {
