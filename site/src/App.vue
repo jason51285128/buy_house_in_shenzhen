@@ -124,7 +124,7 @@ export default {
       pageSize: 20,
       pageSizes: [20, 50, 100, 200],
       total: 0,
-      dataUrl: "http://localhost:15687"
+      dataUrl: "http://94.191.116.177:15687"
     };
   },
   methods: {
