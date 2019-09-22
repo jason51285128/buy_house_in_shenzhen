@@ -9,13 +9,13 @@
         <div class="items">
           <span class="item-title">区域：</span>
           <span class="elems-l">
-            <span class="selected-item">全部</span>
-            <a title="龙岗二手房" href="https://shenzhen.anjuke.com/sale/longgang/">龙岗</a>
-            <a title="南山二手房" href="https://shenzhen.anjuke.com/sale/nanshan/">南山</a>
-            <a title="宝安二手房" href="https://shenzhen.anjuke.com/sale/baoan/">宝安</a>
-            <a title="福田二手房" href="https://shenzhen.anjuke.com/sale/futian/">福田</a>
-            <a title="罗湖二手房" href="https://shenzhen.anjuke.com/sale/luohu/">罗湖</a>
-            <a title="盐田二手房" href="https://shenzhen.anjuke.com/sale/yantian/">盐田</a>
+            <button type="button" value="全部" class="selected-item">全部</button>
+            <button type="button" value="龙岗">龙岗</button>
+            <button type="button" value="南山">南山</button>
+            <button type="button" value="宝安">宝安</button>
+            <button type="button" value="福田">福田</button>
+            <button type="button" value="罗湖">罗湖</button>
+            <button type="button" value="盐田">盐田</button>
           </span>
         </div>
         <!-- 区域 end-->
@@ -24,20 +24,20 @@
         <div class="items">
           <span class="item-title">售价：</span>
           <span class="elems-l">
-            <span class="selected-item">全部</span>
-            <a class href="https://shenzhen.anjuke.com/sale/m26/" rel="nofollow">50万以下</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5050/" rel="nofollow">50-100万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5051/" rel="nofollow">100-150万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m31/" rel="nofollow">150-200万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m32/" rel="nofollow">200-250万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m33/" rel="nofollow">250-300万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5052/" rel="nofollow">300-350万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5053/" rel="nofollow">350-400万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5034/" rel="nofollow">400-500万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5035/" rel="nofollow">500-700万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5036/" rel="nofollow">700-1000万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5054/" rel="nofollow">1000-1500万</a>
-            <a class href="https://shenzhen.anjuke.com/sale/m5055/" rel="nofollow">1500万以上</a>
+            <button type="button" value="全部" class="selected-item">全部</button>
+            <button type="button" value="50万以下">50万以下</button>
+            <button type="button" value="50-100万">50-100万</button>
+            <button type="button" value="100-150万">100-150万</button>
+            <button type="button" value="150-200万">150-200万</button>
+            <button type="button" value="200-250万">200-250万</button>
+            <button type="button" value="250-300万">250-300万</button>
+            <button type="button" value="300-350万">300-350万</button>
+            <button type="button" value="350-400万">350-400万</button>
+            <button type="button" value="400-500万">400-500万</button>
+            <button type="button" value="500-700万">500-700万</button>
+            <button type="button" value="700-1000万">700-1000万</button>
+            <button type="button" value="1000-1500万">1000-1500万</button>
+            <button type="button" value="1500万以上">1500万以上</button>
             <div class="pricecond">
               <form
                 id="pr_form_apf_id_11"
@@ -81,16 +81,16 @@
         <div class="items">
           <span class="item-title">面积：</span>
           <span class="elems-l">
-            <span class="selected-item">全部</span>
-            <a class href="https://shenzhen.anjuke.com/sale/a24/" rel="nofollow">50m²以下</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a25/" rel="nofollow">50-70m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a26/" rel="nofollow">70-90m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a27/" rel="nofollow">90-110m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a28/" rel="nofollow">110-130m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a29/" rel="nofollow">130-150m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a30/" rel="nofollow">150-200m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a31/" rel="nofollow">200-300m²</a>
-            <a class href="https://shenzhen.anjuke.com/sale/a33/" rel="nofollow">300m²以上</a>
+            <button type="button" value="全部" class="selected-item">全部</button>
+            <button type="button" value="50m²以下">50m²以下</button>
+            <button type="button" value="50-70m²">50-70m²</button>
+            <button type="button" value="70-90m²">70-90m²</button>
+            <button type="button" value="90-110m²">90-110m²</button>
+            <button type="button" value="110-130m²">110-130m²</button>
+            <button type="button" value="130-150m²">130-150m²</button>
+            <button type="button" value="150-200m²">150-200m²</button>
+            <button type="button" value="200-300m²">200-300m²</button>
+            <button type="button" value="300m²以上">300m²以上</button>
             <div class="areacond" style="display: inline">
               <form
                 id="pr_form_apf_id_11"
@@ -135,21 +135,21 @@
         <div class="items">
           <span class="item-title">类型：</span>
           <span class="elems-l">
-            <span class="selected-item">全部</span>
-            <a class href="https://shenzhen.anjuke.com/sale/b28/" rel="nofollow">住宅</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b30/" rel="nofollow">公寓</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b36/" rel="nofollow">别墅</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b37/" rel="nofollow">研发用地</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b38/" rel="nofollow">仓储</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b39/" rel="nofollow">写字楼</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b28/" rel="nofollow">宿舍</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b30/" rel="nofollow">厂房</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b36/" rel="nofollow">商业</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b37/" rel="nofollow">文化活动用房</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b38/" rel="nofollow">酒店</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b39/" rel="nofollow">食堂</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b38/" rel="nofollow">综合楼</a>
-            <a class href="https://shenzhen.anjuke.com/sale/b39/" rel="nofollow">其他</a>
+            <button type="button" value="全部" class="selected-item">全部</button>
+            <button type="button" value="住宅">住宅</button>
+            <button type="button" value="公寓">公寓</button>
+            <button type="button" value="别墅">别墅</button>
+            <button type="button" value="研发用地<">研发用地</button>
+            <button type="button" value="仓储">仓储</button>
+            <button type="button" value="写字楼">写字楼</button>
+            <button type="button" value="宿舍">宿舍</button>
+            <button type="button" value="厂房">厂房</button>
+            <button type="button" value="商业">商业</button>
+            <button type="button" value="文化活动用房">文化活动用房</button>
+            <button type="button" value="酒店">酒店</button>
+            <button type="button" value="食堂">食堂</button>
+            <button type="button" value="综合楼">综合楼</button>
+            <button type="button" value="其他">其他</button>
           </span>
         </div>
 
@@ -830,11 +830,13 @@ em {
   font-weight: bold;
   margin-right: 20px;
 }
-.items a {
+.items button {
   margin-right: 20px;
   display: inline-block;
   *display: inline;
   *zoom: 1;
+  border-style: none;
+  cursor: pointer;
 }
 .items a:link,
 .items a:visited {
